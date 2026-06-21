@@ -10,8 +10,34 @@ const DEFAULT_SETTINGS = {
   speechRate: "1",
   autoSpeak: true,
   shuffleWords: false,
+  soundEffects: true,
+  focusMode: false,
   ieltsDailyCount: "10",
 };
+
+const TRIAL_WORDS = [
+  { word: "apple", meaning: "苹果" },
+  { word: "banana", meaning: "香蕉" },
+  { word: "orange", meaning: "橙子" },
+  { word: "school", meaning: "学校" },
+  { word: "happy", meaning: "开心的" },
+];
+
+const CORRECT_MESSAGES = [
+  "答对啦，听得很准。",
+  "这个词你掌握得不错。",
+  "很好，继续下一个。",
+  "今天的耳朵越来越灵了。",
+  "这个词已经更熟了。",
+];
+
+const WRONG_MESSAGES = [
+  "差一点，我们再听一次。",
+  "这个词还没听熟，再练一次就好。",
+  "没关系，错题就是下次进步的入口。",
+  "先别急着背，我们再听一遍。",
+  "这个词先放进小错题本。",
+];
 
 const IELTS_TARGET_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200];
 
@@ -346,6 +372,8 @@ const els = {
   fileName: document.querySelector("#fileName"),
   importButton: document.querySelector("#importButton"),
   startButton: document.querySelector("#startButton"),
+  trialButton: document.querySelector("#trialButton"),
+  quickStartMirror: document.querySelector("#quickStartMirror"),
   heroGameLevel: document.querySelector("#heroGameLevel"),
   heroGameTitle: document.querySelector("#heroGameTitle"),
   gameSummary: document.querySelector("#gameSummary"),
@@ -377,6 +405,11 @@ const els = {
   timerText: document.querySelector("#timerText"),
   speakButton: document.querySelector("#speakButton"),
   speakStatus: document.querySelector("#speakStatus"),
+  coverCard: document.querySelector("#coverCard"),
+  coverResultIcon: document.querySelector("#coverResultIcon"),
+  coverAnswerWord: document.querySelector("#coverAnswerWord"),
+  coverAnswerMeaning: document.querySelector("#coverAnswerMeaning"),
+  particleLayer: document.querySelector("#particleLayer"),
   answerForm: document.querySelector("#answerForm"),
   answerInput: document.querySelector("#answerInput"),
   skipButton: document.querySelector("#skipButton"),
@@ -391,6 +424,7 @@ const els = {
   masteryMessage: document.querySelector("#masteryMessage"),
   levelBadge: document.querySelector("#levelBadge"),
   rewardBox: document.querySelector("#rewardBox"),
+  celebrationLayer: document.querySelector("#celebrationLayer"),
   retryAllButton: document.querySelector("#retryAllButton"),
   retryWrongButton: document.querySelector("#retryWrongButton"),
   exportWrongButton: document.querySelector("#exportWrongButton"),
@@ -411,6 +445,8 @@ const els = {
   speechRate: document.querySelector("#speechRate"),
   autoSpeak: document.querySelector("#autoSpeak"),
   shuffleWords: document.querySelector("#shuffleWords"),
+  soundEffects: document.querySelector("#soundEffects"),
+  focusMode: document.querySelector("#focusMode"),
 };
 
 init();
@@ -433,6 +469,8 @@ function bindEvents() {
   els.fileInput.addEventListener("change", handleFileSelect);
   els.importButton.addEventListener("click", handleImport);
   els.startButton.addEventListener("click", () => startPractice(state.words, false));
+  els.trialButton.addEventListener("click", startTrialPractice);
+  els.quickStartMirror.addEventListener("click", () => startPractice(state.words, false));
   els.clearWordsButton.addEventListener("click", clearWords);
   els.clearHistoryButton.addEventListener("click", clearHistory);
   els.wordList.addEventListener("click", handleWordListClick);
@@ -457,7 +495,7 @@ function bindEvents() {
   els.addIeltsWordsButton.addEventListener("click", addSelectedIeltsWords);
   els.startIeltsStudyButton.addEventListener("click", startSelectedIeltsPractice);
 
-  [els.voiceLang, els.speechRate, els.autoSpeak, els.shuffleWords].forEach((input) => {
+  [els.voiceLang, els.speechRate, els.autoSpeak, els.shuffleWords, els.soundEffects, els.focusMode].forEach((input) => {
     input.addEventListener("change", saveSettingsFromForm);
   });
 
@@ -473,7 +511,7 @@ function showView(viewName) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 
   const titles = {
-    home: "英语单词听写工具",
+    home: "盖盖英语",
     practice: "听写练习",
     result: "听写结果",
     ielts: "雅思词汇计划",
@@ -734,11 +772,16 @@ function parsePlainLine(line) {
 }
 
 function renderHome() {
+  document.body.classList.toggle("focus-mode", Boolean(state.settings.focusMode));
   els.wordCount.textContent = String(state.words.length);
   renderDashboard();
   renderGamePanel();
   renderWordList();
   renderHistory();
+}
+
+function startTrialPractice() {
+  startPractice(TRIAL_WORDS, false);
 }
 
 function renderGamePanel() {
@@ -909,6 +952,7 @@ function startPractice(words, isRetryWrong) {
 
   els.feedbackBox.className = "feedback hidden";
   els.answerInput.value = "";
+  resetCoverCard();
   showView("practice");
   renderPractice();
   startTimer();
@@ -930,7 +974,7 @@ function renderPractice() {
   els.stagePill.textContent = `第 ${currentNumber} 关`;
   els.streakText.textContent = `🔥 连对 ${practice.streak} 个`;
   els.masteredText.textContent = `已掌握 ${practice.correct} 个`;
-  els.livesText.textContent = `${"❤️".repeat(Math.max(practice.lives, 0))}${"🤍".repeat(Math.max(3 - practice.lives, 0))}`;
+  els.livesText.textContent = "🌸 温柔模式";
   els.scoreText.textContent = `⭐ ${practice.score}`;
   els.comboText.textContent = `⚡ x${practice.combo}`;
   els.progressText.textContent = `第 ${currentNumber} / ${practice.words.length} 个`;
@@ -940,6 +984,8 @@ function renderPractice() {
   els.answerInput.focus();
   els.skipButton.disabled = false;
   els.speakButton.disabled = !current;
+  els.speakButton.textContent = "🔊 听一遍";
+  resetCoverCard();
 }
 
 function speakCurrentWord(wordOverride) {
@@ -968,12 +1014,18 @@ function speakWord(word) {
 
   utterance.onstart = () => {
     els.speakStatus.textContent = "正在播放";
+    els.speakButton.textContent = "正在播放";
+    els.speakButton.classList.add("is-playing");
   };
   utterance.onend = () => {
     els.speakStatus.textContent = "";
+    els.speakButton.textContent = "🔊 听一遍";
+    els.speakButton.classList.remove("is-playing");
   };
   utterance.onerror = () => {
     els.speakStatus.textContent = "播放失败，请再试一次。";
+    els.speakButton.textContent = "🔊 听一遍";
+    els.speakButton.classList.remove("is-playing");
   };
 
   window.speechSynthesis.speak(utterance);
@@ -996,14 +1048,13 @@ function handleSubmitAnswer(event) {
     practice.score += 10 * practice.combo;
     practice.earnedXp += 8 * practice.combo;
     practice.earnedStars += 1 * practice.combo;
-    showCorrectFeedback();
-    setTimeout(goNextWord, 450);
+    showCorrectFeedback(current);
+    setTimeout(goNextWord, 800);
     return;
   }
 
   practice.streak = 0;
   practice.combo = 1;
-  practice.lives = Math.max(0, practice.lives - 1);
   recordWrong(current, answer || "未填写");
   showWrongFeedback(current, answer || "未填写");
 }
@@ -1015,26 +1066,34 @@ function handleSkip() {
   const current = practice.words[practice.index];
   practice.streak = 0;
   practice.combo = 1;
-  practice.lives = Math.max(0, practice.lives - 1);
   recordWrong(current, "已跳过");
-  showWrongFeedback(current, "已跳过");
+  showWrongFeedback(current, "已跳过", true);
 }
 
-function showCorrectFeedback() {
+function showCorrectFeedback(wordItem) {
   const practice = state.practice;
   practice.waitingForNext = true;
+  const message = pickRandom(CORRECT_MESSAGES);
+  revealCoverCard("correct", wordItem);
+  decorateAnswerInput("correct");
+  playFeedbackSound("correct");
+  createParticles("correct");
   els.feedbackBox.className = "feedback correct";
-  els.feedbackBox.innerHTML = `<strong>✅ 命中！+${10 * practice.combo} 星分</strong><p>连对 ${practice.streak} 个，当前奖励倍率 x${practice.combo}。</p>`;
+  els.feedbackBox.innerHTML = `<strong>✅ ${message} +${10 * practice.combo} 星分</strong><p>连对 ${practice.streak} 个，当前奖励倍率 x${practice.combo}。</p>`;
   els.answerInput.disabled = true;
   els.skipButton.disabled = true;
 }
 
-function showWrongFeedback(wordItem, answer) {
+function showWrongFeedback(wordItem, answer, isSkip = false) {
   const practice = state.practice;
   practice.waitingForNext = true;
+  const message = isSkip ? "这个词先放进错题本，等会儿再听。" : pickRandom(WRONG_MESSAGES);
+  revealCoverCard(isSkip ? "skipped" : "wrong", wordItem);
+  decorateAnswerInput(isSkip ? "skipped" : "wrong");
+  if (!isSkip) playFeedbackSound("wrong");
   els.feedbackBox.className = "feedback wrong";
   els.feedbackBox.innerHTML = `
-    <strong>💡 生命 -1，再听一次</strong>
+    <strong>💡 ${message}</strong>
     <p>你的答案：${escapeHtml(answer)}</p>
     <p>正确答案：${escapeHtml(wordItem.word)}</p>
     ${wordItem.meaning ? `<p>中文释义：${escapeHtml(wordItem.meaning)}</p>` : ""}
@@ -1064,6 +1123,7 @@ function goNextWord() {
   practice.index += 1;
   practice.waitingForNext = false;
   els.answerInput.value = "";
+  els.answerInput.classList.remove("answer-correct", "answer-wrong", "answer-skipped");
   els.feedbackBox.className = "feedback hidden";
   els.feedbackBox.innerHTML = "";
 
@@ -1106,18 +1166,20 @@ function finishPractice() {
 
   state.lastResult = result;
   applyGameReward(result);
+  playFeedbackSound("finish");
   state.history.unshift(result);
   state.history = state.history.slice(0, 50);
   saveHistory();
   state.practice = null;
   renderResult();
+  createCelebration(result.rate);
   showView("result");
 }
 
 function calculateRoundXp(practice, rate) {
   const clearBonus = rate === 100 ? 30 : 0;
-  const lifeBonus = practice.lives * 5;
-  return practice.earnedXp + clearBonus + lifeBonus;
+  const streakBonus = Math.min(30, practice.bestStreak * 2);
+  return practice.earnedXp + clearBonus + streakBonus;
 }
 
 function calculateRoundStars(practice, rate) {
@@ -1151,11 +1213,117 @@ function renderResult() {
     <div class="reward-item"><span>本局星分</span><strong>⭐ ${result.score || 0}</strong></div>
     <div class="reward-item"><span>获得经验</span><strong>+${result.earnedXp || 0} XP</strong></div>
     <div class="reward-item"><span>获得星星</span><strong>+${result.earnedStars || 0}</strong></div>
-    <div class="reward-item"><span>剩余生命</span><strong>${"❤️".repeat(result.remainingLives || 0) || "0"}</strong></div>
+    <div class="reward-item"><span>最高连击</span><strong>${result.bestStreak || 0}</strong></div>
   `;
   els.retryWrongButton.disabled = result.wrongItems.length === 0;
   els.exportWrongButton.disabled = result.wrongItems.length === 0;
   renderResultWrongList();
+}
+
+function resetCoverCard() {
+  els.coverCard.className = "cover-card is-covered";
+  els.coverResultIcon.textContent = "✓";
+  els.coverAnswerWord.textContent = "答案已盖住";
+  els.coverAnswerMeaning.textContent = "先听，再写";
+  els.particleLayer.innerHTML = "";
+}
+
+function revealCoverCard(type, wordItem) {
+  els.coverCard.className = `cover-card is-revealed ${type}`;
+  els.coverResultIcon.textContent = type === "correct" ? "✓" : "·";
+  els.coverAnswerWord.textContent = wordItem.word;
+  els.coverAnswerMeaning.textContent = wordItem.meaning || "没有中文释义";
+}
+
+function decorateAnswerInput(type) {
+  els.answerInput.classList.remove("answer-correct", "answer-wrong", "answer-skipped");
+  els.answerInput.classList.add(`answer-${type}`);
+}
+
+function createParticles(type) {
+  if (state.settings.focusMode) return;
+
+  els.particleLayer.innerHTML = "";
+  const marks = type === "correct" ? ["✦", "★", "✧", "✦", "★"] : ["·", "✧", "·"];
+  marks.forEach((mark, index) => {
+    const particle = document.createElement("span");
+    particle.textContent = mark;
+    particle.style.setProperty("--x", `${(index - 2) * 28}px`);
+    particle.style.setProperty("--delay", `${index * 45}ms`);
+    els.particleLayer.appendChild(particle);
+  });
+}
+
+function createCelebration(rate) {
+  if (state.settings.focusMode) return;
+
+  els.celebrationLayer.innerHTML = "";
+  const count = rate >= 90 ? 10 : 7;
+  for (let index = 0; index < count; index += 1) {
+    const particle = document.createElement("span");
+    particle.textContent = index % 2 ? "✦" : "❀";
+    particle.style.setProperty("--left", `${8 + index * (84 / count)}%`);
+    particle.style.setProperty("--delay", `${index * 60}ms`);
+    els.celebrationLayer.appendChild(particle);
+  }
+}
+
+function playFeedbackSound(type) {
+  if (!state.settings.soundEffects) return;
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+
+  const context = new AudioContext();
+  const gain = context.createGain();
+  gain.connect(context.destination);
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+
+  if (type === "correct") {
+    playTone(context, gain, 660, 0, 0.11, 0.3);
+    playTone(context, gain, 880, 0.11, 0.14, 0.24);
+    closeAudioContext(context, 0.32);
+    return;
+  }
+
+  if (type === "finish") {
+    playTone(context, gain, 523, 0, 0.13, 0.22);
+    playTone(context, gain, 659, 0.16, 0.13, 0.22);
+    playTone(context, gain, 784, 0.32, 0.18, 0.2);
+    closeAudioContext(context, 0.7);
+    return;
+  }
+
+  const oscillator = context.createOscillator();
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(220, context.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(180, context.currentTime + 0.22);
+  oscillator.connect(gain);
+  gain.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.24);
+  oscillator.start();
+  oscillator.stop(context.currentTime + 0.24);
+  closeAudioContext(context, 0.3);
+}
+
+function playTone(context, gain, frequency, startOffset, duration, volume) {
+  const oscillator = context.createOscillator();
+  oscillator.type = "sine";
+  oscillator.frequency.value = frequency;
+  oscillator.connect(gain);
+  const start = context.currentTime + startOffset;
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.025);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function closeAudioContext(context, delay) {
+  window.setTimeout(() => context.close().catch(() => {}), delay * 1000);
+}
+
+function pickRandom(list) {
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 function getLevelInfo(rate) {
@@ -1276,7 +1444,10 @@ function renderSettings() {
   els.speechRate.value = state.settings.speechRate;
   els.autoSpeak.checked = state.settings.autoSpeak;
   els.shuffleWords.checked = state.settings.shuffleWords;
+  els.soundEffects.checked = state.settings.soundEffects;
+  els.focusMode.checked = state.settings.focusMode;
   els.ieltsDailyCount.value = state.settings.ieltsDailyCount || DEFAULT_SETTINGS.ieltsDailyCount;
+  document.body.classList.toggle("focus-mode", Boolean(state.settings.focusMode));
 }
 
 function saveSettingsFromForm() {
@@ -1285,9 +1456,12 @@ function saveSettingsFromForm() {
     speechRate: els.speechRate.value,
     autoSpeak: els.autoSpeak.checked,
     shuffleWords: els.shuffleWords.checked,
+    soundEffects: els.soundEffects.checked,
+    focusMode: els.focusMode.checked,
     ieltsDailyCount: els.ieltsDailyCount.value,
   };
   localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+  document.body.classList.toggle("focus-mode", Boolean(state.settings.focusMode));
 }
 
 function checkSpeechSupport() {

@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>英语单词听写工具</title>
+    <title>盖盖英语</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">⭐ 本地学习版</p>
-          <h1 id="pageTitle">英语单词听写工具</h1>
+          <p class="eyebrow">🌸 柔粉学习版</p>
+          <h1 id="pageTitle">盖盖英语</h1>
         </div>
         <nav class="top-actions" aria-label="页面导航">
           <button class="ghost-button" data-view-button="home" type="button">首页</button>
@@ -24,11 +24,11 @@
         <section id="homeView" class="view active" aria-labelledby="homeTitle">
           <section class="hero-panel">
             <div class="hero-copy">
-              <span class="hero-icon" aria-hidden="true">🎧</span>
+              <span class="hero-icon" aria-hidden="true">🐱</span>
               <div>
-                <p class="eyebrow">今日单词小冒险</p>
-                <h2 id="homeTitle">听一听，拼一拼，点亮你的等级徽章</h2>
-                <p>导入单词本后开始闯关。答对会连击，结束会得到本次等级。</p>
+                <p class="eyebrow">今日学习</p>
+                <h2 id="homeTitle">把答案盖住，先听，再写。</h2>
+                <p>每天进步一点点，答对会点亮星星，完成后拿到你的掌握等级。</p>
               </div>
             </div>
             <div class="hero-prize" aria-hidden="true">
@@ -37,15 +37,34 @@
               <small id="heroGameTitle">单词新手</small>
             </div>
             <div class="hero-actions">
-              <button id="startButton" class="big-start-button" type="button">▶ 开始冒险</button>
+              <button id="startButton" class="big-start-button" type="button">开始今日听写 ▶</button>
+              <button id="trialButton" class="trial-button" type="button">试试 5 个单词</button>
               <button class="ghost-button" data-view-button="settings" type="button">调整设置</button>
             </div>
+          </section>
+
+          <section class="quick-action-grid" aria-label="快捷学习入口">
+            <button class="quick-action-card" data-view-button="ielts" type="button">
+              <span>🎒</span>
+              <strong>雅思计划</strong>
+              <small>先学词，再听写</small>
+            </button>
+            <button class="quick-action-card" type="button" id="quickStartMirror">
+              <span>🎧</span>
+              <strong>今日复习</strong>
+              <small>开始完整流程</small>
+            </button>
+            <button class="quick-action-card" data-view-button="settings" type="button">
+              <span>🌷</span>
+              <strong>我的设置</strong>
+              <small>语速和顺序</small>
+            </button>
           </section>
 
           <section class="game-panel panel" aria-label="游戏进度">
             <div>
               <p class="panel-kicker">WORD QUEST</p>
-              <h2>单词冒险进度</h2>
+              <h2>等级成长</h2>
               <p id="gameSummary">答对单词获得经验和星星，连击越高奖励越多。</p>
             </div>
             <div class="xp-wrap">
@@ -87,7 +106,7 @@
                 <div>
                   <p class="panel-kicker">STEP 1</p>
                   <h2>装入今天的单词</h2>
-                  <p>粘贴单词，或上传 TXT / CSV 文件。</p>
+                <p>粘贴单词，或上传 TXT / CSV 文件。今天先从一小组开始也很好。</p>
                 </div>
               </div>
               <textarea id="importText" class="large-textarea" placeholder="apple 苹果&#10;banana 香蕉&#10;orange 橙子"></textarea>
@@ -107,8 +126,8 @@
             <section class="panel">
               <div class="section-head">
                 <div>
-                  <p class="panel-kicker">STEP 2</p>
-                  <h2>今天要挑战的词</h2>
+                  <p class="panel-kicker">MY WORDS</p>
+                  <h2>我的单词本</h2>
                   <p>可以单独听音，也可以删掉不想练的词。</p>
                 </div>
                 <button id="clearWordsButton" class="danger-link" type="button">清空</button>
@@ -170,13 +189,26 @@
             </div>
 
             <div class="listen-zone">
-              <button id="speakButton" class="listen-button" type="button">🔊 听音</button>
+              <div id="coverCard" class="cover-card is-covered">
+                <div class="cover-face cover-front">
+                  <span class="cover-helper" aria-hidden="true">🐱</span>
+                  <strong>答案已盖住</strong>
+                  <p>先听，再写</p>
+                  <button id="speakButton" class="listen-button" type="button">🔊 听一遍</button>
+                </div>
+                <div class="cover-face cover-back" aria-live="polite">
+                  <span id="coverResultIcon" class="cover-result-icon">✓</span>
+                  <strong id="coverAnswerWord">answer</strong>
+                  <p id="coverAnswerMeaning">meaning</p>
+                </div>
+              </div>
+              <div id="particleLayer" class="particle-layer" aria-hidden="true"></div>
               <span id="speakStatus" class="speak-status" aria-live="polite"></span>
             </div>
 
             <form id="answerForm" class="answer-form">
               <label for="answerInput">输入你听到的单词</label>
-              <input id="answerInput" type="text" autocomplete="off" spellcheck="false" />
+              <input id="answerInput" type="text" autocomplete="off" spellcheck="false" placeholder="把你听到的单词写下来" />
               <div class="button-row">
                 <button class="primary-button" type="submit">提交</button>
                 <button id="skipButton" class="ghost-button" type="button">跳过</button>
@@ -189,6 +221,7 @@
 
         <section id="resultView" class="view" aria-labelledby="resultTitle">
           <section class="panel result-panel">
+            <div id="celebrationLayer" class="celebration-layer" aria-hidden="true"></div>
             <div class="result-hero">
               <div class="level-badge" id="levelBadge">⭐</div>
               <div>
@@ -322,6 +355,16 @@
               <label class="toggle-item">
                 <span>随机顺序听写</span>
                 <input id="shuffleWords" type="checkbox" />
+              </label>
+
+              <label class="toggle-item">
+                <span>答题音效</span>
+                <input id="soundEffects" type="checkbox" />
+              </label>
+
+              <label class="toggle-item">
+                <span>专注模式：减少动画</span>
+                <input id="focusMode" type="checkbox" />
               </label>
             </div>
           </section>
