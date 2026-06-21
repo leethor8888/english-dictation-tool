@@ -179,6 +179,75 @@ const IELTS_LEVELS = [
   },
 ];
 
+const IELTS_WORD_DETAILS = {
+  name: ["/neim/", "我的名字叫 Lily。"],
+  home: ["/hoʊm/", "我要回家。"],
+  food: ["/fuːd/", "这个食物很好吃。"],
+  water: ["/ˈwɔːtər/", "我需要一些水。"],
+  happy: ["/ˈhæpi/", "我今天感觉很开心。"],
+  school: ["/skuːl/", "她去学校上学。"],
+  family: ["/ˈfæməli/", "我的家人住在这里。"],
+  friend: ["/frend/", "他是我最好的朋友。"],
+  morning: ["/ˈmɔːrnɪŋ/", "我早上学习。"],
+  market: ["/ˈmɑːrkɪt/", "我们在市场买水果。"],
+  listen: ["/ˈlɪsən/", "请认真听。"],
+  clean: ["/kliːn/", "我每周打扫我的房间。"],
+  travel: ["/ˈtrævəl/", "我乘火车旅行。"],
+  weather: ["/ˈweðər/", "今天天气很好。"],
+  library: ["/ˈlaɪbreri/", "我从图书馆借了一本书。"],
+  question: ["/ˈkwestʃən/", "我可以问一个问题吗？"],
+  answer: ["/ˈænsər/", "请把你的答案写在这里。"],
+  healthy: ["/ˈhelθi/", "吃蔬菜是健康的。"],
+  opinion: ["/əˈpɪnjən/", "在我看来，阅读很有用。"],
+  improve: ["/ɪmˈpruːv/", "练习可以提高你的拼写。"],
+  culture: ["/ˈkʌltʃər/", "食物是当地文化的一部分。"],
+  habit: ["/ˈhæbɪt/", "好习惯能帮助学生学习。"],
+  reason: ["/ˈriːzən/", "这个变化的原因是什么？"],
+  simple: ["/ˈsɪmpəl/", "这个规则很容易遵守。"],
+  environment: ["/ɪnˈvaɪrənmənt/", "我们应该保护环境。"],
+  education: ["/ˌedʒuˈkeɪʃən/", "教育改变一个人的未来。"],
+  technology: ["/tekˈnɑːlədʒi/", "科技让生活更方便。"],
+  community: ["/kəˈmjuːnəti/", "这个社区需要一个新图书馆。"],
+  benefit: ["/ˈbenɪfɪt/", "锻炼有很多健康好处。"],
+  problem: ["/ˈprɑːbləm/", "交通是大城市里的严重问题。"],
+  advantage: ["/ədˈvæntɪdʒ/", "骑自行车的一个优势是成本低。"],
+  disadvantage: ["/ˌdɪsədˈvæntɪdʒ/", "主要缺点是它花费的时间。"],
+  increase: ["/ɪnˈkriːs/", "在线学习可能会增加灵活性。"],
+  reduce: ["/rɪˈduːs/", "公共交通可以减少污染。"],
+  choice: ["/tʃɔɪs/", "学生在学校需要更多选择。"],
+  support: ["/səˈpɔːrt/", "父母应该支持孩子的兴趣。"],
+  consume: ["/kənˈsuːm/", "人们冬天会消耗更多能源。"],
+  efficient: ["/ɪˈfɪʃənt/", "这是一种高效的背单词方法。"],
+  solution: ["/səˈluːʃən/", "这座城市需要一个长期解决方案。"],
+  pressure: ["/ˈpreʃər/", "学生经常面临考试压力。"],
+  influence: ["/ˈɪnfluəns/", "朋友会影响我们的选择。"],
+  essential: ["/ɪˈsenʃəl/", "睡眠对健康很必要。"],
+  sustainable: ["/səˈsteɪnəbəl/", "城市需要可持续的交通系统。"],
+  priority: ["/praɪˈɔːrəti/", "健康应该是首要任务。"],
+  impact: ["/ˈɪmpækt/", "旅游业会影响当地文化。"],
+  challenge: ["/ˈtʃælɪndʒ/", "学习一门语言是一项长期挑战。"],
+  appropriate: ["/əˈproʊpriət/", "正式写作要选择合适的词。"],
+  significant: ["/sɪɡˈnɪfɪkənt/", "有了显著的进步。"],
+  considerable: ["/kənˈsɪdərəbəl/", "这项政策产生了相当大的影响。"],
+  perspective: ["/pərˈspektɪv/", "从我的角度看，这个计划很实际。"],
+  contribute: ["/kənˈtrɪbjuːt/", "志愿者为社区做贡献。"],
+  maintain: ["/meɪnˈteɪn/", "保持健康的生活方式很难。"],
+  potential: ["/pəˈtenʃəl/", "这个想法有很大潜力。"],
+  evidence: ["/ˈevɪdəns/", "有强有力的证据支持这个观点。"],
+  phenomenon: ["/fəˈnɑːmɪnən/", "这种现象在城市地区很常见。"],
+  allocate: ["/ˈæləkeɪt/", "政府应该明智地分配资金。"],
+  substantial: ["/səbˈstænʃəl/", "这个项目需要大量投资。"],
+  interpret: ["/ɪnˈtɜːrprət/", "人们可能会用不同方式解读数据。"],
+  implement: ["/ˈɪmplɪment/", "学校可以实施新的学习方法。"],
+  complicated: ["/ˈkɑːmplɪkeɪtɪd/", "这个问题比看起来更复杂。"],
+  comprehensive: ["/ˌkɑːmprɪˈhensɪv/", "需要一个全面的计划。"],
+  intricate: ["/ˈɪntrɪkət/", "这种关系错综复杂且敏感。"],
+  mitigate: ["/ˈmɪtɪɡeɪt/", "更多树木可以缓解空气污染。"],
+  implication: ["/ˌɪmplɪˈkeɪʃən/", "这个决定有严重影响。"],
+  sophisticated: ["/səˈfɪstɪkeɪtɪd/", "这个系统非常复杂精密。"],
+  indispensable: ["/ˌɪndɪˈspensəbəl/", "沟通在团队合作中不可或缺。"],
+};
+
 const state = {
   words: loadJson(STORAGE_KEYS.words, []),
   history: loadJson(STORAGE_KEYS.history, []),
@@ -353,17 +422,24 @@ function renderIeltsPlan() {
     .join("");
   els.ieltsWordCards.innerHTML = level.words
     .map(
-      ([word, meaning, phrase]) => `
+      ([word, meaning, phrase]) => {
+        const [phonetic, translation] = IELTS_WORD_DETAILS[word] || ["", ""];
+        return `
         <article class="study-card">
           <div>
             <span class="study-band">IELTS ${level.band}</span>
             <h3>${escapeHtml(word)}</h3>
+            <div class="phonetic">${escapeHtml(phonetic)}</div>
             <p>${escapeHtml(meaning)}</p>
           </div>
-          <div class="study-phrase">${escapeHtml(phrase)}</div>
+          <div class="study-phrase">
+            <strong>${escapeHtml(phrase)}</strong>
+            <span>${escapeHtml(translation)}</span>
+          </div>
           <button class="icon-button" data-study-speak="${escapeHtml(word)}" type="button" title="听音">🔊</button>
         </article>
-      `,
+      `;
+      },
     )
     .join("");
 }

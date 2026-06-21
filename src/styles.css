@@ -404,18 +404,39 @@ p {
   font-size: 28px;
 }
 
+.phonetic {
+  width: fit-content;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #3867ff;
+  background: #eef4ff;
+  font-size: 14px;
+  font-weight: 900;
+}
+
 .study-card p {
   margin-bottom: 0;
   font-weight: 800;
 }
 
 .study-phrase {
+  display: grid;
+  gap: 8px;
   border-radius: 8px;
   padding: 12px;
   color: #344054;
   background: #f2f7ff;
   font-weight: 800;
   line-height: 1.5;
+}
+
+.study-phrase strong {
+  color: #253047;
+}
+
+.study-phrase span {
+  color: #69758a;
 }
 
 .study-card .icon-button {
