@@ -11,6 +11,174 @@ const DEFAULT_SETTINGS = {
   shuffleWords: false,
 };
 
+const IELTS_LEVELS = [
+  {
+    band: "1",
+    cefr: "A1 入门",
+    vocabSize: "约 300-500 词",
+    daily: "每天 5 个新词 + 5 分钟复习",
+    note: "先掌握最常见的生活词和简单动作。",
+    words: [
+      ["name", "名字", "My name is Lily."],
+      ["home", "家", "I am going home."],
+      ["food", "食物", "This food is good."],
+      ["water", "水", "I need some water."],
+      ["happy", "开心的", "I feel happy today."],
+      ["school", "学校", "She goes to school."],
+    ],
+  },
+  {
+    band: "2",
+    cefr: "A1-A2 基础",
+    vocabSize: "约 800-1,000 词",
+    daily: "每天 8 个新词 + 8 分钟复习",
+    note: "能表达非常简单的个人和家庭信息。",
+    words: [
+      ["family", "家庭", "My family lives here."],
+      ["friend", "朋友", "He is my best friend."],
+      ["morning", "早晨", "I study in the morning."],
+      ["market", "市场", "We buy fruit at the market."],
+      ["listen", "听", "Please listen carefully."],
+      ["clean", "干净的；清理", "I clean my room every week."],
+    ],
+  },
+  {
+    band: "3",
+    cefr: "A2 初级",
+    vocabSize: "约 1,200-1,800 词",
+    daily: "每天 10 个新词 + 10 分钟复习",
+    note: "开始积累常见场景词，比如交通、购物、学习。",
+    words: [
+      ["travel", "旅行", "I travel by train."],
+      ["weather", "天气", "The weather is nice today."],
+      ["library", "图书馆", "I borrowed a book from the library."],
+      ["question", "问题", "Can I ask a question?"],
+      ["answer", "回答", "Please write your answer here."],
+      ["healthy", "健康的", "Eating vegetables is healthy."],
+    ],
+  },
+  {
+    band: "4",
+    cefr: "A2-B1 进阶",
+    vocabSize: "约 2,000-2,800 词",
+    daily: "每天 12 个新词 + 12 分钟复习",
+    note: "重点练习校园、工作、兴趣和简单观点表达。",
+    words: [
+      ["opinion", "观点", "In my opinion, reading is useful."],
+      ["improve", "提高", "Practice can improve your spelling."],
+      ["culture", "文化", "Food is part of local culture."],
+      ["habit", "习惯", "Good habits help students learn."],
+      ["reason", "原因", "What is the reason for this change?"],
+      ["simple", "简单的", "The rule is simple to follow."],
+    ],
+  },
+  {
+    band: "5",
+    cefr: "B1 中级",
+    vocabSize: "约 3,000-4,000 词",
+    daily: "每天 15 个新词 + 15 分钟复习",
+    note: "开始积累雅思常见话题词，能表达基本观点。",
+    words: [
+      ["environment", "环境", "We should protect the environment."],
+      ["education", "教育", "Education changes a person's future."],
+      ["technology", "科技", "Technology makes life more convenient."],
+      ["community", "社区", "The community needs a new library."],
+      ["benefit", "好处", "Exercise has many health benefits."],
+      ["problem", "问题", "Traffic is a serious problem in big cities."],
+    ],
+  },
+  {
+    band: "5.5",
+    cefr: "B1-B2 中高级",
+    vocabSize: "约 4,000-5,000 词",
+    daily: "每天 18 个新词 + 15 分钟复习",
+    note: "加入更多抽象词和连接表达，减少重复用词。",
+    words: [
+      ["advantage", "优势", "One advantage of cycling is low cost."],
+      ["disadvantage", "劣势", "The main disadvantage is the time it takes."],
+      ["increase", "增加", "Online learning may increase flexibility."],
+      ["reduce", "减少", "Public transport can reduce pollution."],
+      ["choice", "选择", "Students need more choices at school."],
+      ["support", "支持", "Parents should support children's interests."],
+    ],
+  },
+  {
+    band: "6",
+    cefr: "B2 上中级",
+    vocabSize: "约 5,000-6,000 词",
+    daily: "每天 20 个新词 + 20 分钟复习",
+    note: "重点提升话题词准确性，能写出更自然的句子。",
+    words: [
+      ["consume", "消费；消耗", "People consume more energy in winter."],
+      ["efficient", "高效的", "This is an efficient way to learn words."],
+      ["solution", "解决方案", "The city needs a long-term solution."],
+      ["pressure", "压力", "Students often face exam pressure."],
+      ["influence", "影响", "Friends can influence our choices."],
+      ["essential", "必要的", "Sleep is essential for good health."],
+    ],
+  },
+  {
+    band: "6.5",
+    cefr: "B2 稳定",
+    vocabSize: "约 6,000-7,000 词",
+    daily: "每天 22 个新词 + 20 分钟复习",
+    note: "适合冲刺多数留学申请要求，强化同义替换和搭配。",
+    words: [
+      ["sustainable", "可持续的", "Cities need sustainable transport systems."],
+      ["priority", "优先事项", "Health should be a top priority."],
+      ["impact", "影响", "Tourism has an impact on local culture."],
+      ["challenge", "挑战", "Learning a language is a long-term challenge."],
+      ["appropriate", "合适的", "Choose appropriate words for formal writing."],
+      ["significant", "显著的", "There was a significant improvement."],
+    ],
+  },
+  {
+    band: "7",
+    cefr: "C1 初阶",
+    vocabSize: "约 7,500-8,500 词",
+    daily: "每天 25 个新词 + 25 分钟复习",
+    note: "目标是表达更精准，避免简单词反复出现。",
+    words: [
+      ["considerable", "相当大的", "The policy had a considerable effect."],
+      ["perspective", "视角", "From my perspective, the plan is practical."],
+      ["contribute", "贡献；促成", "Volunteers contribute to the community."],
+      ["maintain", "维持", "It is hard to maintain a healthy lifestyle."],
+      ["potential", "潜在的", "The idea has great potential."],
+      ["evidence", "证据", "There is strong evidence for this view."],
+    ],
+  },
+  {
+    band: "7.5",
+    cefr: "C1 熟练",
+    vocabSize: "约 9,000-10,000 词",
+    daily: "每天 28 个新词 + 25 分钟复习",
+    note: "加入学术词、精准动词和更自然的短语搭配。",
+    words: [
+      ["phenomenon", "现象", "This phenomenon is common in urban areas."],
+      ["allocate", "分配", "Governments should allocate funds wisely."],
+      ["substantial", "大量的；实质的", "The project requires substantial investment."],
+      ["interpret", "解读", "People may interpret the data differently."],
+      ["implement", "实施", "Schools can implement new learning methods."],
+      ["complicated", "复杂的", "The issue is more complicated than it seems."],
+    ],
+  },
+  {
+    band: "8",
+    cefr: "C1-C2 高级",
+    vocabSize: "约 10,000-12,000+ 词",
+    daily: "每天 30 个新词 + 30 分钟复习",
+    note: "强化高级搭配、抽象表达和学术场景迁移能力。",
+    words: [
+      ["comprehensive", "全面的", "A comprehensive plan is needed."],
+      ["intricate", "错综复杂的", "The relationship is intricate and sensitive."],
+      ["mitigate", "缓解", "More trees can mitigate air pollution."],
+      ["implication", "影响；含义", "The decision has serious implications."],
+      ["sophisticated", "复杂精密的；老练的", "The system is highly sophisticated."],
+      ["indispensable", "不可或缺的", "Communication is indispensable in teamwork."],
+    ],
+  },
+];
+
 const state = {
   words: loadJson(STORAGE_KEYS.words, []),
   history: loadJson(STORAGE_KEYS.history, []),
@@ -28,6 +196,7 @@ const els = {
     home: document.querySelector("#homeView"),
     practice: document.querySelector("#practiceView"),
     result: document.querySelector("#resultView"),
+    ielts: document.querySelector("#ieltsView"),
     settings: document.querySelector("#settingsView"),
   },
   importText: document.querySelector("#importText"),
@@ -72,6 +241,16 @@ const els = {
   exportWrongButton: document.querySelector("#exportWrongButton"),
   backHomeButton: document.querySelector("#backHomeButton"),
   resultWrongList: document.querySelector("#resultWrongList"),
+  ieltsBandSelect: document.querySelector("#ieltsBandSelect"),
+  ieltsBandTitle: document.querySelector("#ieltsBandTitle"),
+  ieltsVocabSize: document.querySelector("#ieltsVocabSize"),
+  ieltsCefr: document.querySelector("#ieltsCefr"),
+  ieltsDaily: document.querySelector("#ieltsDaily"),
+  ieltsNote: document.querySelector("#ieltsNote"),
+  dailyPlanList: document.querySelector("#dailyPlanList"),
+  ieltsWordCards: document.querySelector("#ieltsWordCards"),
+  addIeltsWordsButton: document.querySelector("#addIeltsWordsButton"),
+  startIeltsStudyButton: document.querySelector("#startIeltsStudyButton"),
   voiceLang: document.querySelector("#voiceLang"),
   speechRate: document.querySelector("#speechRate"),
   autoSpeak: document.querySelector("#autoSpeak"),
@@ -83,7 +262,9 @@ init();
 function init() {
   bindEvents();
   loadVoices();
+  renderIeltsOptions();
   renderHome();
+  renderIeltsPlan();
   renderSettings();
   checkSpeechSupport();
 }
@@ -111,6 +292,9 @@ function bindEvents() {
   els.exportWrongButton.addEventListener("click", exportWrongWords);
   els.backHomeButton.addEventListener("click", () => showView("home"));
   els.resultWrongList.addEventListener("click", handleResultWrongClick);
+  els.ieltsBandSelect.addEventListener("change", renderIeltsPlan);
+  els.addIeltsWordsButton.addEventListener("click", addSelectedIeltsWords);
+  els.startIeltsStudyButton.addEventListener("click", startSelectedIeltsPractice);
 
   [els.voiceLang, els.speechRate, els.autoSpeak, els.shuffleWords].forEach((input) => {
     input.addEventListener("change", saveSettingsFromForm);
@@ -125,11 +309,13 @@ function showView(viewName) {
   Object.entries(els.views).forEach(([name, node]) => {
     node.classList.toggle("active", name === viewName);
   });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   const titles = {
     home: "英语单词听写工具",
     practice: "听写练习",
     result: "听写结果",
+    ielts: "雅思词汇计划",
     settings: "设置",
   };
   els.pageTitle.textContent = titles[viewName] || titles.home;
@@ -137,6 +323,71 @@ function showView(viewName) {
   if (viewName === "home") {
     renderHome();
   }
+}
+
+function renderIeltsOptions() {
+  els.ieltsBandSelect.innerHTML = IELTS_LEVELS.map(
+    (level) => `<option value="${level.band}">雅思 ${level.band}</option>`,
+  ).join("");
+  els.ieltsBandSelect.value = "6.5";
+}
+
+function getSelectedIeltsLevel() {
+  return IELTS_LEVELS.find((level) => level.band === els.ieltsBandSelect.value) || IELTS_LEVELS[7];
+}
+
+function renderIeltsPlan() {
+  const level = getSelectedIeltsLevel();
+  els.ieltsBandTitle.textContent = `雅思 ${level.band} 目标`;
+  els.ieltsVocabSize.textContent = level.vocabSize;
+  els.ieltsCefr.textContent = level.cefr;
+  els.ieltsDaily.textContent = level.daily;
+  els.ieltsNote.textContent = level.note;
+  els.dailyPlanList.innerHTML = [
+    ["1", "先看 6 个词的中文和例句，理解怎么用。"],
+    ["2", level.daily],
+    ["3", "点击每张卡片的听音，跟读 1 遍。"],
+    ["4", "加入今日词库后开始听写，错题当天重练。"],
+  ]
+    .map((item) => `<div class="daily-step"><strong>${item[0]}</strong><span>${item[1]}</span></div>`)
+    .join("");
+  els.ieltsWordCards.innerHTML = level.words
+    .map(
+      ([word, meaning, phrase]) => `
+        <article class="study-card">
+          <div>
+            <span class="study-band">IELTS ${level.band}</span>
+            <h3>${escapeHtml(word)}</h3>
+            <p>${escapeHtml(meaning)}</p>
+          </div>
+          <div class="study-phrase">${escapeHtml(phrase)}</div>
+          <button class="icon-button" data-study-speak="${escapeHtml(word)}" type="button" title="听音">🔊</button>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function addSelectedIeltsWords(showAlert = true) {
+  const level = getSelectedIeltsLevel();
+  const text = level.words.map(([word, meaning]) => `${word} ${meaning}`).join("\n");
+  const before = state.words.length;
+  mergeWords(parseWordText(text));
+  const added = state.words.length - before;
+  if (showAlert) {
+    alert(`已加入雅思 ${level.band} 示例词：新增 ${added} 个，重复词已自动跳过。`);
+  }
+}
+
+function startSelectedIeltsPractice() {
+  const level = getSelectedIeltsLevel();
+  addSelectedIeltsWords(false);
+  startPractice(level.words.map(([word, meaning]) => ({
+    id: `ielts-${level.band}-${word}`,
+    word,
+    meaning,
+    createdAt: Date.now(),
+  })), false);
 }
 
 function handleFileSelect(event) {
@@ -169,6 +420,16 @@ function handleImport() {
     return;
   }
 
+  const { added, duplicated } = mergeWords(parsedWords);
+  els.importText.value = "";
+  state.fileText = "";
+  els.fileInput.value = "";
+  els.fileName.textContent = "未选择文件";
+  els.importMessage.textContent = `导入完成：新增 ${added} 个，跳过重复 ${duplicated} 个。`;
+  renderHome();
+}
+
+function mergeWords(parsedWords) {
   const existing = new Map(state.words.map((item) => [normalizeWordKey(item.word), item]));
   let added = 0;
   let duplicated = 0;
@@ -198,12 +459,8 @@ function handleImport() {
   });
 
   saveWords();
-  els.importText.value = "";
-  state.fileText = "";
-  els.fileInput.value = "";
-  els.fileName.textContent = "未选择文件";
-  els.importMessage.textContent = `导入完成：新增 ${added} 个，跳过重复 ${duplicated} 个。`;
   renderHome();
+  return { added, duplicated };
 }
 
 function parseWordText(text) {
@@ -652,6 +909,13 @@ function handleResultWrongClick(event) {
   const item = state.lastResult?.wrongItems[index];
   if (item) speakWord(item.wordItem.word);
 }
+
+document.addEventListener("click", (event) => {
+  const studyWord = event.target.dataset.studySpeak;
+  if (studyWord) {
+    speakWord(studyWord);
+  }
+});
 
 function retryWrongWords() {
   const wrongItems = state.lastResult?.wrongItems || [];

@@ -15,6 +15,7 @@
         </div>
         <nav class="top-actions" aria-label="页面导航">
           <button class="ghost-button" data-view-button="home" type="button">首页</button>
+          <button class="ghost-button" data-view-button="ielts" type="button">雅思计划</button>
           <button class="ghost-button" data-view-button="settings" type="button">设置</button>
         </nav>
       </header>
@@ -188,6 +189,57 @@
           <section class="panel">
             <h2>本次错题</h2>
             <div id="resultWrongList" class="wrong-list empty-state">本次没有错题。</div>
+          </section>
+        </section>
+
+        <section id="ieltsView" class="view" aria-labelledby="ieltsTitle">
+          <section class="ielts-hero panel">
+            <div>
+              <p class="panel-kicker">IELTS PLAN</p>
+              <h2 id="ieltsTitle">雅思目标词汇计划</h2>
+              <p>选择目标分数，先看词汇量目标和每日任务，再学习例句，最后加入听写闯关。</p>
+            </div>
+            <div class="ielts-select-wrap">
+              <label for="ieltsBandSelect">目标等级</label>
+              <select id="ieltsBandSelect"></select>
+            </div>
+          </section>
+
+          <section class="ielts-grid">
+            <div class="panel ielts-plan-card">
+              <p class="panel-kicker">学习目标</p>
+              <h2 id="ieltsBandTitle">雅思 6.5</h2>
+              <div class="ielts-metrics">
+                <div><span>建议词汇量</span><strong id="ieltsVocabSize">--</strong></div>
+                <div><span>对应能力</span><strong id="ieltsCefr">--</strong></div>
+                <div><span>每日建议</span><strong id="ieltsDaily">--</strong></div>
+              </div>
+              <p id="ieltsNote" class="message"></p>
+              <div class="button-row">
+                <button id="addIeltsWordsButton" class="big-start-button" type="button">加入今日词库</button>
+                <button id="startIeltsStudyButton" class="primary-button" type="button">学完开始听写</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <p class="panel-kicker">每日安排</p>
+              <h2>今天怎么背</h2>
+              <div id="dailyPlanList" class="daily-plan-list"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="section-head">
+              <div>
+                <p class="panel-kicker">先学习，再听写</p>
+                <h2>词汇学习卡</h2>
+                <p>每个词都配一个日常用语，帮助你先理解怎么用，再进入听写。</p>
+              </div>
+            </div>
+            <div id="ieltsWordCards" class="study-card-grid"></div>
+            <p class="source-note">
+              说明：雅思官方公布分数能力描述，但不公布每个分数对应的精确词汇量。这里的词汇量是备考规划估算，后续可以替换为你的正式词库。
+            </p>
           </section>
         </section>
 

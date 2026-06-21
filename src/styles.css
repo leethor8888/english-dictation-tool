@@ -287,6 +287,148 @@ p {
   margin-top: 18px;
 }
 
+.ielts-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  border: 3px solid #262b3f;
+  background: linear-gradient(135deg, #e0f2fe, #fff7c8 55%, #ffe4ef);
+  box-shadow: 7px 7px 0 #262b3f;
+}
+
+.ielts-select-wrap {
+  display: grid;
+  gap: 8px;
+  min-width: 210px;
+  font-weight: 900;
+}
+
+.ielts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.ielts-plan-card {
+  border-color: #262b3f;
+}
+
+.ielts-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.ielts-metrics div {
+  border: 2px solid #e5edf8;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfdff;
+}
+
+.ielts-metrics span,
+.daily-step span {
+  display: block;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ielts-metrics strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 20px;
+}
+
+.daily-plan-list {
+  display: grid;
+  gap: 10px;
+}
+
+.daily-step {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 2px solid #e5edf8;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.daily-step strong {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--primary);
+}
+
+.study-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.study-card {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  min-height: 210px;
+  border: 3px solid #262b3f;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 5px 5px 0 #ffd166;
+}
+
+.study-band {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: #7c2d12;
+  background: #ffedd5;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.study-card h3 {
+  margin: 10px 0 4px;
+  font-size: 28px;
+}
+
+.study-card p {
+  margin-bottom: 0;
+  font-weight: 800;
+}
+
+.study-phrase {
+  border-radius: 8px;
+  padding: 12px;
+  color: #344054;
+  background: #f2f7ff;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.study-card .icon-button {
+  justify-self: end;
+}
+
+.source-note {
+  margin: 16px 0 0;
+  color: #7c2d12;
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .panel,
 .practice-card {
   background: rgba(255, 255, 255, 0.96);
@@ -752,6 +894,7 @@ input[type="checkbox"] {
 
   .layout-grid,
   .secondary-grid,
+  .ielts-grid,
   .stats-grid,
   .dashboard-grid,
   .practice-status,
@@ -781,6 +924,16 @@ input[type="checkbox"] {
     width: 100%;
     min-height: 96px;
     border-radius: 8px;
+  }
+
+  .ielts-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ielts-metrics,
+  .study-card-grid {
+    grid-template-columns: 1fr;
   }
 
   .word-item,
