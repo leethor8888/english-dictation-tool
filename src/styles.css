@@ -448,6 +448,35 @@ p {
   gap: 12px;
 }
 
+.word-summary {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  border: 2px solid #e5edf8;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fffdf3;
+}
+
+.word-summary strong {
+  color: #253047;
+}
+
+.word-summary div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.word-summary span {
+  border: 2px solid #262b3f;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .study-card {
   position: relative;
   display: grid;

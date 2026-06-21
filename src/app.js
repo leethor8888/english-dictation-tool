@@ -13,6 +13,8 @@ const DEFAULT_SETTINGS = {
   ieltsDailyCount: "10",
 };
 
+const IELTS_TARGET_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200];
+
 const IELTS_LEVELS = [
   {
     band: "1",
@@ -181,6 +183,68 @@ const IELTS_LEVELS = [
   },
 ];
 
+const IELTS_EXTRA_WORDS = [
+  ["access", "使用权；通道"], ["achieve", "实现"], ["adapt", "适应"], ["adequate", "足够的"],
+  ["adjust", "调整"], ["affect", "影响"], ["alternative", "替代的；选择"], ["analyze", "分析"],
+  ["approach", "方法；接近"], ["area", "区域；领域"], ["aspect", "方面"], ["assess", "评估"],
+  ["assume", "假设"], ["attitude", "态度"], ["available", "可获得的"], ["aware", "意识到的"],
+  ["balance", "平衡"], ["barrier", "障碍"], ["behavior", "行为"], ["category", "类别"],
+  ["cause", "原因；导致"], ["complex", "复杂的"], ["concept", "概念"], ["concern", "担忧；涉及"],
+  ["conduct", "进行；行为"], ["connect", "连接"], ["consequence", "后果"], ["consistent", "一致的"],
+  ["construct", "建造"], ["context", "背景；语境"], ["contrast", "对比"], ["create", "创造"],
+  ["culture", "文化"], ["data", "数据"], ["debate", "辩论"], ["decline", "下降"],
+  ["define", "定义"], ["demand", "需求"], ["demonstrate", "证明；展示"], ["depend", "依赖"],
+  ["design", "设计"], ["develop", "发展"], ["difference", "差异"], ["discuss", "讨论"],
+  ["economy", "经济"], ["effect", "影响；效果"], ["emphasis", "重点"], ["enable", "使能够"],
+  ["encourage", "鼓励"], ["energy", "能源"], ["engage", "参与"], ["enhance", "提高"],
+  ["ensure", "确保"], ["establish", "建立"], ["evaluate", "评价"], ["evolve", "演变"],
+  ["expand", "扩大"], ["experience", "经历；经验"], ["factor", "因素"], ["feature", "特征"],
+  ["finance", "金融"], ["focus", "焦点；集中"], ["function", "功能"], ["generate", "产生"],
+  ["global", "全球的"], ["growth", "增长"], ["identify", "识别"], ["ignore", "忽视"],
+  ["illustrate", "说明"], ["individual", "个人"], ["industry", "产业"], ["innovation", "创新"],
+  ["insight", "洞察"], ["involve", "涉及"], ["issue", "问题"], ["legal", "法律的"],
+  ["method", "方法"], ["modern", "现代的"], ["network", "网络"], ["obtain", "获得"],
+  ["occur", "发生"], ["option", "选项"], ["participate", "参与"], ["percent", "百分比"],
+  ["period", "时期"], ["policy", "政策"], ["positive", "积极的"], ["process", "过程"],
+  ["produce", "生产；产生"], ["project", "项目"], ["promote", "促进"], ["provide", "提供"],
+  ["purchase", "购买"], ["range", "范围"], ["region", "地区"], ["regulate", "监管"],
+  ["relationship", "关系"], ["research", "研究"], ["resource", "资源"], ["respond", "回应"],
+  ["restrict", "限制"], ["role", "角色"], ["sector", "部门；领域"], ["select", "选择"],
+  ["similar", "相似的"], ["source", "来源"], ["specific", "具体的"], ["strategy", "策略"],
+  ["structure", "结构"], ["survey", "调查"], ["target", "目标"], ["task", "任务"],
+  ["theory", "理论"], ["transfer", "转移"], ["trend", "趋势"], ["vary", "变化"],
+  ["vehicle", "交通工具"], ["welfare", "福利"], ["urban", "城市的"], ["rural", "乡村的"],
+  ["migration", "迁移"], ["population", "人口"], ["employment", "就业"], ["income", "收入"],
+  ["poverty", "贫困"], ["inequality", "不平等"], ["crime", "犯罪"], ["security", "安全"],
+  ["privacy", "隐私"], ["media", "媒体"], ["advertising", "广告"], ["consumer", "消费者"],
+  ["transport", "交通"], ["infrastructure", "基础设施"], ["housing", "住房"], ["climate", "气候"],
+  ["pollution", "污染"], ["conservation", "保护"], ["biodiversity", "生物多样性"], ["recycling", "回收"],
+  ["renewable", "可再生的"], ["emission", "排放"], ["healthcare", "医疗保健"], ["medicine", "药物；医学"],
+  ["nutrition", "营养"], ["disease", "疾病"], ["treatment", "治疗"], ["prevention", "预防"],
+  ["academic", "学术的"], ["curriculum", "课程"], ["qualification", "资格"], ["literacy", "读写能力"],
+  ["motivation", "动力"], ["discipline", "纪律；学科"], ["creativity", "创造力"], ["critical", "批判性的；关键的"],
+  ["automation", "自动化"], ["artificial", "人工的"], ["digital", "数字的"], ["device", "设备"],
+  ["platform", "平台"], ["virtual", "虚拟的"], ["remote", "远程的"], ["flexible", "灵活的"],
+  ["collaboration", "合作"], ["leadership", "领导力"], ["management", "管理"], ["investment", "投资"],
+  ["competition", "竞争"], ["productivity", "生产力"], ["distribution", "分配"], ["export", "出口"],
+  ["import", "进口"], ["tax", "税"], ["budget", "预算"], ["profit", "利润"],
+  ["loss", "损失"], ["risk", "风险"], ["insurance", "保险"], ["contract", "合同"],
+  ["tourism", "旅游业"], ["heritage", "遗产"], ["tradition", "传统"], ["identity", "身份"],
+  ["diversity", "多样性"], ["minority", "少数群体"], ["gender", "性别"], ["generation", "一代人"],
+  ["elderly", "老年人"], ["youth", "青年"], ["volunteer", "志愿者"], ["charity", "慈善"],
+  ["responsibility", "责任"], ["ethics", "伦理"], ["justice", "公正"], ["freedom", "自由"],
+  ["conflict", "冲突"], ["cooperation", "合作"], ["negotiation", "谈判"], ["agreement", "协议"],
+  ["analysis", "分析"], ["criterion", "标准"], ["scheme", "方案"], ["framework", "框架"],
+  ["principle", "原则"], ["outcome", "结果"], ["indicator", "指标"], ["capacity", "能力；容量"],
+  ["valid", "有效的"], ["reliable", "可靠的"], ["accurate", "准确的"], ["precise", "精确的"],
+  ["approximately", "大约"], ["frequently", "频繁地"], ["gradually", "逐渐地"], ["dramatically", "显著地"],
+  ["relatively", "相对地"], ["primarily", "主要地"], ["previous", "以前的"], ["current", "当前的"],
+  ["initial", "最初的"], ["final", "最终的"], ["major", "主要的"], ["minor", "次要的"],
+  ["external", "外部的"], ["internal", "内部的"], ["visible", "可见的"], ["stable", "稳定的"],
+  ["declining", "下降的"], ["increasing", "增加的"], ["widespread", "广泛的"], ["rare", "罕见的"],
+  ["practical", "实际的"], ["theoretical", "理论的"], ["formal", "正式的"], ["informal", "非正式的"],
+];
+
 const IELTS_WORD_DETAILS = {
   name: ["/neim/", "我的名字叫 Lily。"],
   home: ["/hoʊm/", "我要回家。"],
@@ -339,6 +403,7 @@ const els = {
   ieltsDailyCount: document.querySelector("#ieltsDailyCount"),
   ieltsNote: document.querySelector("#ieltsNote"),
   dailyPlanList: document.querySelector("#dailyPlanList"),
+  ieltsWordSummary: document.querySelector("#ieltsWordSummary"),
   ieltsWordCards: document.querySelector("#ieltsWordCards"),
   addIeltsWordsButton: document.querySelector("#addIeltsWordsButton"),
   startIeltsStudyButton: document.querySelector("#startIeltsStudyButton"),
@@ -426,7 +491,13 @@ function renderIeltsOptions() {
     (level) => `<option value="${level.band}">雅思 ${level.band}</option>`,
   ).join("");
   els.ieltsBandSelect.value = "6.5";
-  els.ieltsDailyCount.value = state.settings.ieltsDailyCount || DEFAULT_SETTINGS.ieltsDailyCount;
+  els.ieltsDailyCount.innerHTML = IELTS_TARGET_OPTIONS.map(
+    (count) => `<option value="${count}">${count} 个</option>`,
+  ).join("");
+  const savedCount = IELTS_TARGET_OPTIONS.includes(Number(state.settings.ieltsDailyCount))
+    ? state.settings.ieltsDailyCount
+    : DEFAULT_SETTINGS.ieltsDailyCount;
+  els.ieltsDailyCount.value = savedCount;
 }
 
 function getSelectedIeltsLevel() {
@@ -437,16 +508,44 @@ function getSelectedIeltsDailyWords() {
   const level = getSelectedIeltsLevel();
   const selectedIndex = IELTS_LEVELS.findIndex((item) => item.band === level.band);
   const dailyCount = Number(els.ieltsDailyCount.value || state.settings.ieltsDailyCount || 10);
-  return IELTS_LEVELS.slice(0, selectedIndex + 1)
+  const levelWords = IELTS_LEVELS.slice(0, selectedIndex + 1)
     .flatMap((item) =>
       item.words.map(([word, meaning, phrase]) => ({
         band: item.band,
         word,
         meaning,
         phrase,
+        translation: IELTS_WORD_DETAILS[word]?.[1] || "",
       })),
-    )
-    .slice(0, dailyCount);
+    );
+  const extraWords = IELTS_EXTRA_WORDS.map(([word, meaning], index) => ({
+    band: level.band,
+    word,
+    meaning,
+    phrase: createIeltsPhrase(word),
+    translation: createIeltsPhraseTranslation(meaning),
+    order: index,
+  }));
+
+  return uniqueWords([...levelWords, ...extraWords]).slice(0, dailyCount);
+}
+
+function uniqueWords(words) {
+  const seen = new Set();
+  return words.filter((item) => {
+    const key = normalizeWordKey(item.word);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function createIeltsPhrase(word) {
+  return `This word is useful when discussing ${word} in IELTS topics.`;
+}
+
+function createIeltsPhraseTranslation(meaning) {
+  return `这个词可用于讨论“${meaning}”相关的雅思话题。`;
 }
 
 function renderIeltsPlan() {
@@ -459,16 +558,20 @@ function renderIeltsPlan() {
   els.ieltsNote.textContent = level.note;
   els.dailyPlanList.innerHTML = [
     ["1", `你选择今天学习 ${dailyCount} 个词。`],
-    ["2", `先看本页 ${dailyWords.length} 张词卡：音标、释义、例句和翻译。`],
+    ["2", `本页已生成 ${dailyWords.length} 个今日目标词，加入词库和听写都使用同一批。`],
     ["3", "点击每张卡片的听音，跟读 1 遍。"],
     ["4", "加入今日词库后开始听写，错题当天重练。"],
   ]
     .map((item) => `<div class="daily-step"><strong>${item[0]}</strong><span>${item[1]}</span></div>`)
     .join("");
+  els.ieltsWordSummary.innerHTML = `
+    <strong>今日 ${dailyWords.length} 个目标词：</strong>
+    <div>${dailyWords.map((item) => `<span>${escapeHtml(item.word)}</span>`).join("")}</div>
+  `;
   els.ieltsWordCards.innerHTML = dailyWords
     .map(
-      ({ band, word, meaning, phrase }) => {
-        const [phonetic, translation] = IELTS_WORD_DETAILS[word] || ["", ""];
+      ({ band, word, meaning, phrase, translation }) => {
+        const [phonetic, savedTranslation] = IELTS_WORD_DETAILS[word] || ["点击听音练发音", ""];
         return `
         <article class="study-card">
           <div>
@@ -479,7 +582,7 @@ function renderIeltsPlan() {
           </div>
           <div class="study-phrase">
             <strong>${escapeHtml(phrase)}</strong>
-            <span>${escapeHtml(translation)}</span>
+            <span>${escapeHtml(savedTranslation || translation)}</span>
           </div>
           <button class="icon-button" data-study-speak="${escapeHtml(word)}" type="button" title="听音">🔊</button>
         </article>
