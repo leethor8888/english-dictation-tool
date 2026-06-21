@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
   speechRate: "1",
   autoSpeak: true,
   shuffleWords: false,
+  ieltsDailyCount: "10",
 };
 
 const IELTS_LEVELS = [
@@ -335,7 +336,7 @@ const els = {
   ieltsBandTitle: document.querySelector("#ieltsBandTitle"),
   ieltsVocabSize: document.querySelector("#ieltsVocabSize"),
   ieltsCefr: document.querySelector("#ieltsCefr"),
-  ieltsDaily: document.querySelector("#ieltsDaily"),
+  ieltsDailyCount: document.querySelector("#ieltsDailyCount"),
   ieltsNote: document.querySelector("#ieltsNote"),
   dailyPlanList: document.querySelector("#dailyPlanList"),
   ieltsWordCards: document.querySelector("#ieltsWordCards"),
@@ -383,6 +384,11 @@ function bindEvents() {
   els.backHomeButton.addEventListener("click", () => showView("home"));
   els.resultWrongList.addEventListener("click", handleResultWrongClick);
   els.ieltsBandSelect.addEventListener("change", renderIeltsPlan);
+  els.ieltsDailyCount.addEventListener("change", () => {
+    state.settings.ieltsDailyCount = els.ieltsDailyCount.value;
+    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+    renderIeltsPlan();
+  });
   els.addIeltsWordsButton.addEventListener("click", addSelectedIeltsWords);
   els.startIeltsStudyButton.addEventListener("click", startSelectedIeltsPractice);
 
@@ -420,35 +426,53 @@ function renderIeltsOptions() {
     (level) => `<option value="${level.band}">雅思 ${level.band}</option>`,
   ).join("");
   els.ieltsBandSelect.value = "6.5";
+  els.ieltsDailyCount.value = state.settings.ieltsDailyCount || DEFAULT_SETTINGS.ieltsDailyCount;
 }
 
 function getSelectedIeltsLevel() {
   return IELTS_LEVELS.find((level) => level.band === els.ieltsBandSelect.value) || IELTS_LEVELS[7];
 }
 
+function getSelectedIeltsDailyWords() {
+  const level = getSelectedIeltsLevel();
+  const selectedIndex = IELTS_LEVELS.findIndex((item) => item.band === level.band);
+  const dailyCount = Number(els.ieltsDailyCount.value || state.settings.ieltsDailyCount || 10);
+  return IELTS_LEVELS.slice(0, selectedIndex + 1)
+    .flatMap((item) =>
+      item.words.map(([word, meaning, phrase]) => ({
+        band: item.band,
+        word,
+        meaning,
+        phrase,
+      })),
+    )
+    .slice(0, dailyCount);
+}
+
 function renderIeltsPlan() {
   const level = getSelectedIeltsLevel();
+  const dailyWords = getSelectedIeltsDailyWords();
+  const dailyCount = Number(els.ieltsDailyCount.value || state.settings.ieltsDailyCount || 10);
   els.ieltsBandTitle.textContent = `雅思 ${level.band} 目标`;
   els.ieltsVocabSize.textContent = level.vocabSize;
   els.ieltsCefr.textContent = level.cefr;
-  els.ieltsDaily.textContent = level.daily;
   els.ieltsNote.textContent = level.note;
   els.dailyPlanList.innerHTML = [
-    ["1", "先看 6 个词的中文和例句，理解怎么用。"],
-    ["2", level.daily],
+    ["1", `你选择今天学习 ${dailyCount} 个词。`],
+    ["2", `先看本页 ${dailyWords.length} 张词卡：音标、释义、例句和翻译。`],
     ["3", "点击每张卡片的听音，跟读 1 遍。"],
     ["4", "加入今日词库后开始听写，错题当天重练。"],
   ]
     .map((item) => `<div class="daily-step"><strong>${item[0]}</strong><span>${item[1]}</span></div>`)
     .join("");
-  els.ieltsWordCards.innerHTML = level.words
+  els.ieltsWordCards.innerHTML = dailyWords
     .map(
-      ([word, meaning, phrase]) => {
+      ({ band, word, meaning, phrase }) => {
         const [phonetic, translation] = IELTS_WORD_DETAILS[word] || ["", ""];
         return `
         <article class="study-card">
           <div>
-            <span class="study-band">IELTS ${level.band}</span>
+            <span class="study-band">IELTS ${band}</span>
             <h3>${escapeHtml(word)}</h3>
             <div class="phonetic">${escapeHtml(phonetic)}</div>
             <p>${escapeHtml(meaning)}</p>
@@ -467,19 +491,21 @@ function renderIeltsPlan() {
 
 function addSelectedIeltsWords(showAlert = true) {
   const level = getSelectedIeltsLevel();
-  const text = level.words.map(([word, meaning]) => `${word} ${meaning}`).join("\n");
+  const dailyWords = getSelectedIeltsDailyWords();
+  const text = dailyWords.map(({ word, meaning }) => `${word} ${meaning}`).join("\n");
   const before = state.words.length;
   mergeWords(parseWordText(text));
   const added = state.words.length - before;
   if (showAlert) {
-    alert(`已加入雅思 ${level.band} 示例词：新增 ${added} 个，重复词已自动跳过。`);
+    alert(`已加入雅思 ${level.band} 今日目标词：新增 ${added} 个，重复词已自动跳过。`);
   }
 }
 
 function startSelectedIeltsPractice() {
   const level = getSelectedIeltsLevel();
+  const dailyWords = getSelectedIeltsDailyWords();
   addSelectedIeltsWords(false);
-  startPractice(level.words.map(([word, meaning]) => ({
+  startPractice(dailyWords.map(({ word, meaning }) => ({
     id: `ielts-${level.band}-${word}`,
     word,
     meaning,
@@ -1147,6 +1173,7 @@ function renderSettings() {
   els.speechRate.value = state.settings.speechRate;
   els.autoSpeak.checked = state.settings.autoSpeak;
   els.shuffleWords.checked = state.settings.shuffleWords;
+  els.ieltsDailyCount.value = state.settings.ieltsDailyCount || DEFAULT_SETTINGS.ieltsDailyCount;
 }
 
 function saveSettingsFromForm() {
@@ -1155,6 +1182,7 @@ function saveSettingsFromForm() {
     speechRate: els.speechRate.value,
     autoSpeak: els.autoSpeak.checked,
     shuffleWords: els.shuffleWords.checked,
+    ieltsDailyCount: els.ieltsDailyCount.value,
   };
   localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
 }

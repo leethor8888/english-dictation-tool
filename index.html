@@ -239,7 +239,16 @@
               <div class="ielts-metrics">
                 <div><span>建议词汇量</span><strong id="ieltsVocabSize">--</strong></div>
                 <div><span>对应能力</span><strong id="ieltsCefr">--</strong></div>
-                <div><span>每日建议</span><strong id="ieltsDaily">--</strong></div>
+                <div class="metric-control">
+                  <label for="ieltsDailyCount">今日目标</label>
+                  <select id="ieltsDailyCount">
+                    <option value="5">5 个</option>
+                    <option value="10">10 个</option>
+                    <option value="15">15 个</option>
+                    <option value="20">20 个</option>
+                    <option value="30">30 个</option>
+                  </select>
+                </div>
               </div>
               <p id="ieltsNote" class="message"></p>
               <div class="button-row">

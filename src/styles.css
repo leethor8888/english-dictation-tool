@@ -383,6 +383,25 @@ p {
   background: #fbfdff;
 }
 
+.ielts-metrics .metric-control {
+  display: grid;
+  gap: 8px;
+}
+
+.metric-control label {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.metric-control select {
+  width: 100%;
+  min-width: 0;
+  border-color: #262b3f;
+  background: #fff7c8;
+  font-weight: 900;
+}
+
 .ielts-metrics span,
 .daily-step span {
   display: block;
