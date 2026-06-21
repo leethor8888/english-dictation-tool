@@ -324,6 +324,39 @@
               说明：雅思官方公布分数能力描述，但不公布每个分数对应的精确词汇量。这里的词汇量是备考规划估算，后续可以替换为你的正式词库。
             </p>
           </section>
+
+          <section class="panel ielts-practice-lab">
+            <div class="section-head">
+              <div>
+                <p class="panel-kicker">IELTS PRACTICE LAB</p>
+                <h2>雅思真题训练室</h2>
+                <p>按官方题型做仿真训练：听力、阅读、口语一问一答、写作评分。内容使用公开题型方向和自制练习，不搬运盗版真题原文。</p>
+              </div>
+            </div>
+            <div class="ielts-skill-grid">
+              <button class="ielts-skill-card" data-ielts-skill="listening" type="button">
+                <span>🎧</span>
+                <strong>听力单项</strong>
+                <small>听一段校园咨询，完成填空题</small>
+              </button>
+              <button class="ielts-skill-card" data-ielts-skill="reading" type="button">
+                <span>📖</span>
+                <strong>阅读单项</strong>
+                <small>短篇学术文章 + 判断题</small>
+              </button>
+              <button class="ielts-skill-card" data-ielts-skill="speaking" type="button">
+                <span>🤖</span>
+                <strong>口语陪练</strong>
+                <small>机器人提问，你用英文回答</small>
+              </button>
+              <button class="ielts-skill-card" data-ielts-skill="writing" type="button">
+                <span>✍️</span>
+                <strong>写作评分</strong>
+                <small>Task 1 / Task 2 本地规则评分</small>
+              </button>
+            </div>
+            <div id="ieltsSkillStage" class="ielts-skill-stage hidden"></div>
+          </section>
         </section>
 
         <section id="gamesView" class="view" aria-labelledby="gamesTitle">
@@ -430,6 +463,14 @@
                   <option value="1.2">快速</option>
                 </select>
               </label>
+
+              <label class="setting-item">
+                <span>发音人</span>
+                <select id="voiceName">
+                  <option value="">自动选择英文发音人</option>
+                </select>
+              </label>
+              <p class="message voice-note">可选发音人由当前浏览器和设备提供；不同电脑、手机显示的声音可能不同。</p>
 
               <label class="toggle-item">
                 <span>进入下一个单词时自动播放</span>

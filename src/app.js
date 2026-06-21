@@ -25,8 +25,50 @@ const SOUND_PAIRS = [
   ["walk", "work", "走路；工作"],
 ];
 
+const IELTS_SKILL_BANK = {
+  listening: {
+    title: "听力单项：校园课程咨询",
+    transcript:
+      "Good morning. I would like to register for the evening photography course. The course begins on Monday the fifteenth of July. It runs for six weeks and the class starts at six thirty in room B twelve. Students need to bring a notebook, but cameras can be borrowed from the media centre. The total fee is one hundred and twenty pounds.",
+    questions: [
+      { prompt: "Course type", answer: "photography" },
+      { prompt: "Start date", answer: "15 July" },
+      { prompt: "Length", answer: "six weeks" },
+      { prompt: "Room", answer: "B12" },
+      { prompt: "Fee", answer: "120 pounds" },
+    ],
+  },
+  reading: {
+    title: "阅读单项：城市屋顶花园",
+    passage:
+      "In many crowded cities, rooftop gardens are becoming more common. They do not replace large public parks, but they can reduce heat, collect rainwater and give residents a quiet place to grow plants. Some researchers also argue that small green spaces improve concentration because people can rest their eyes after long periods indoors. However, rooftop gardens require careful planning. Buildings must be strong enough to carry the extra weight, and plants need regular watering during dry months. For this reason, successful projects usually involve both architects and local residents.",
+    questions: [
+      { prompt: "Rooftop gardens can completely replace public parks.", answer: "false" },
+      { prompt: "Green spaces may help people concentrate better.", answer: "true" },
+      { prompt: "All buildings are suitable for rooftop gardens.", answer: "false" },
+      { prompt: "Successful projects may need cooperation between professionals and residents.", answer: "true" },
+    ],
+  },
+  speaking: {
+    title: "口语陪练：Study and Daily Life",
+    questions: [
+      "Do you prefer studying alone or with other people?",
+      "What subject did you enjoy most at school?",
+      "Describe a skill you would like to learn in the future.",
+      "Why do some people find it difficult to keep learning as adults?",
+    ],
+  },
+  writing: {
+    title: "写作评分：Task 2",
+    prompt:
+      "Some people think students should learn mainly from teachers, while others believe students should learn independently. Discuss both views and give your own opinion.",
+    tips: ["回应双方观点", "给出明确个人立场", "使用原因和例子展开", "结尾总结观点"],
+  },
+};
+
 const DEFAULT_SETTINGS = {
   voiceLang: "en-US",
+  voiceName: "",
   speechRate: "1",
   autoSpeak: true,
   shuffleWords: false,
@@ -478,9 +520,11 @@ const els = {
   dailyPlanList: document.querySelector("#dailyPlanList"),
   ieltsWordSummary: document.querySelector("#ieltsWordSummary"),
   ieltsWordCards: document.querySelector("#ieltsWordCards"),
+  ieltsSkillStage: document.querySelector("#ieltsSkillStage"),
   addIeltsWordsButton: document.querySelector("#addIeltsWordsButton"),
   startIeltsStudyButton: document.querySelector("#startIeltsStudyButton"),
   voiceLang: document.querySelector("#voiceLang"),
+  voiceName: document.querySelector("#voiceName"),
   speechRate: document.querySelector("#speechRate"),
   autoSpeak: document.querySelector("#autoSpeak"),
   shuffleWords: document.querySelector("#shuffleWords"),
@@ -537,8 +581,11 @@ function bindEvents() {
   });
   els.addIeltsWordsButton.addEventListener("click", addSelectedIeltsWords);
   els.startIeltsStudyButton.addEventListener("click", startSelectedIeltsPractice);
+  document.querySelectorAll("[data-ielts-skill]").forEach((button) => {
+    button.addEventListener("click", () => renderIeltsSkill(button.dataset.ieltsSkill));
+  });
 
-  [els.voiceLang, els.speechRate, els.autoSpeak, els.shuffleWords, els.soundEffects, els.focusMode].forEach((input) => {
+  [els.voiceLang, els.voiceName, els.speechRate, els.autoSpeak, els.shuffleWords, els.soundEffects, els.focusMode].forEach((input) => {
     input.addEventListener("change", saveSettingsFromForm);
   });
 
@@ -702,6 +749,198 @@ function startSelectedIeltsPractice() {
     meaning,
     createdAt: Date.now(),
   })), false);
+}
+
+function renderIeltsSkill(skill) {
+  const item = IELTS_SKILL_BANK[skill];
+  if (!item) return;
+
+  els.ieltsSkillStage.classList.remove("hidden");
+  if (skill === "listening") renderIeltsListening(item);
+  if (skill === "reading") renderIeltsReading(item);
+  if (skill === "speaking") renderIeltsSpeaking(item);
+  if (skill === "writing") renderIeltsWriting(item);
+  els.ieltsSkillStage.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderIeltsListening(test) {
+  els.ieltsSkillStage.innerHTML = `
+    <div class="ielts-skill-head">
+      <div>
+        <p class="stage-pill">Listening</p>
+        <h3>${escapeHtml(test.title)}</h3>
+        <p>先播放录音稿，再填写答案。大小写不影响判断。</p>
+      </div>
+      <button class="listen-button compact-listen" data-ielts-speak="${escapeHtml(test.transcript)}" type="button">🔊 播放</button>
+    </div>
+    <form id="ieltsListeningForm" class="ielts-question-list">
+      ${test.questions.map((question, index) => `
+        <label class="ielts-question">
+          <span>${index + 1}. ${escapeHtml(question.prompt)}</span>
+          <input name="q${index}" type="text" autocomplete="off" />
+        </label>
+      `).join("")}
+      <button class="primary-button" type="submit">提交听力答案</button>
+    </form>
+    <div id="ieltsSkillFeedback" class="mini-game-feedback hidden"></div>
+  `;
+  document.querySelector("#ieltsListeningForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const answers = test.questions.map((_, index) => event.target.elements[`q${index}`].value);
+    const correct = answers.filter((answer, index) => normalizeAnswer(answer) === normalizeAnswer(test.questions[index].answer)).length;
+    showIeltsSkillResult(correct, test.questions.length, test.questions);
+  });
+}
+
+function renderIeltsReading(test) {
+  els.ieltsSkillStage.innerHTML = `
+    <div class="ielts-skill-head">
+      <div>
+        <p class="stage-pill">Reading</p>
+        <h3>${escapeHtml(test.title)}</h3>
+        <p>阅读短文，选择 True / False。</p>
+      </div>
+    </div>
+    <article class="reading-passage">${escapeHtml(test.passage)}</article>
+    <form id="ieltsReadingForm" class="ielts-question-list">
+      ${test.questions.map((question, index) => `
+        <label class="ielts-question">
+          <span>${index + 1}. ${escapeHtml(question.prompt)}</span>
+          <select name="q${index}">
+            <option value="">请选择</option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+        </label>
+      `).join("")}
+      <button class="primary-button" type="submit">提交阅读答案</button>
+    </form>
+    <div id="ieltsSkillFeedback" class="mini-game-feedback hidden"></div>
+  `;
+  document.querySelector("#ieltsReadingForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const answers = test.questions.map((_, index) => event.target.elements[`q${index}`].value);
+    const correct = answers.filter((answer, index) => normalizeAnswer(answer) === test.questions[index].answer).length;
+    showIeltsSkillResult(correct, test.questions.length, test.questions);
+  });
+}
+
+function renderIeltsSpeaking(test) {
+  els.ieltsSkillStage.innerHTML = `
+    <div class="ielts-skill-head">
+      <div>
+        <p class="stage-pill">Speaking</p>
+        <h3>${escapeHtml(test.title)}</h3>
+        <p>机器人逐题提问。你可以打字回答，也可以自己开口练，再把答案写下来。</p>
+      </div>
+      <button id="speakCurrentQuestionButton" class="listen-button compact-listen" type="button">🤖 提问</button>
+    </div>
+    <div id="speakingQuestionBox" class="sentence-card"></div>
+    <form id="ieltsSpeakingForm" class="mini-answer-form speaking-form">
+      <textarea id="speakingAnswer" class="large-textarea" placeholder="用英文回答当前问题"></textarea>
+      <button class="primary-button" type="submit">提交回答</button>
+    </form>
+    <div id="ieltsSkillFeedback" class="mini-game-feedback hidden"></div>
+  `;
+  let index = 0;
+  const renderQuestion = () => {
+    const question = test.questions[index];
+    document.querySelector("#speakingQuestionBox").innerHTML = `<strong>Question ${index + 1}</strong><p>${escapeHtml(question)}</p>`;
+    speakWord(question);
+  };
+  document.querySelector("#speakCurrentQuestionButton").addEventListener("click", renderQuestion);
+  document.querySelector("#ieltsSpeakingForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const answer = document.querySelector("#speakingAnswer").value;
+    const result = scoreSpeakingAnswer(answer);
+    document.querySelector("#ieltsSkillFeedback").className = "mini-game-feedback correct";
+    document.querySelector("#ieltsSkillFeedback").innerHTML = `
+      <strong>估算表现：Band ${result.band}</strong>
+      <p>${escapeHtml(result.feedback)}</p>
+    `;
+    document.querySelector("#speakingAnswer").value = "";
+    index = Math.min(index + 1, test.questions.length - 1);
+    renderQuestion();
+  });
+  renderQuestion();
+}
+
+function renderIeltsWriting(test) {
+  els.ieltsSkillStage.innerHTML = `
+    <div class="ielts-skill-head">
+      <div>
+        <p class="stage-pill">Writing</p>
+        <h3>${escapeHtml(test.title)}</h3>
+        <p>本地规则评分会检查字数、观点、连接词和结构，给出估算 band。</p>
+      </div>
+    </div>
+    <div class="sentence-card writing-prompt">
+      <strong>Prompt</strong>
+      <p>${escapeHtml(test.prompt)}</p>
+      <small>${test.tips.map(escapeHtml).join(" / ")}</small>
+    </div>
+    <form id="ieltsWritingForm" class="ielts-writing-form">
+      <textarea id="writingAnswer" class="large-textarea" placeholder="在这里写 Task 2 作文，建议 250 词以上"></textarea>
+      <button class="primary-button" type="submit">本地估分</button>
+    </form>
+    <div id="ieltsSkillFeedback" class="mini-game-feedback hidden"></div>
+  `;
+  document.querySelector("#ieltsWritingForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const text = document.querySelector("#writingAnswer").value;
+    const result = scoreWritingAnswer(text);
+    document.querySelector("#ieltsSkillFeedback").className = "mini-game-feedback correct";
+    document.querySelector("#ieltsSkillFeedback").innerHTML = `
+      <strong>估算 Band ${result.band}</strong>
+      <p>${escapeHtml(result.summary)}</p>
+      <ul>${result.advice.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
+    `;
+  });
+}
+
+function showIeltsSkillResult(correct, total, questions) {
+  const rate = Math.round((correct / total) * 100);
+  const band = correct === total ? "7.5+" : correct >= total * 0.75 ? "6.5" : correct >= total * 0.5 ? "5.5" : "4.5";
+  const feedback = document.querySelector("#ieltsSkillFeedback");
+  feedback.className = `mini-game-feedback ${rate >= 60 ? "correct" : "wrong"}`;
+  feedback.innerHTML = `
+    <strong>正确 ${correct} / ${total}，估算 Band ${band}</strong>
+    <p>参考答案：${questions.map((question, index) => `${index + 1}. ${question.answer}`).join("；")}</p>
+  `;
+}
+
+function scoreSpeakingAnswer(answer) {
+  const words = answer.trim().split(/\s+/).filter(Boolean);
+  const connectors = (answer.match(/\b(because|however|also|for example|therefore|although|in my opinion)\b/gi) || []).length;
+  const band = Math.min(8, Math.max(4, 4 + (words.length >= 40 ? 1 : 0) + (words.length >= 80 ? 1 : 0) + Math.min(2, connectors)));
+  const feedback =
+    words.length < 30
+      ? "回答偏短，建议加入原因、例子和个人感受。"
+      : connectors < 2
+        ? "内容已经展开，可以多用 because / for example / however 连接想法。"
+        : "回答有展开和连接，下一步练习更自然的发音和停顿。";
+  return { band: band.toFixed(0), feedback };
+}
+
+function scoreWritingAnswer(text) {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const paragraphs = text.split(/\n+/).filter((line) => line.trim().length > 20).length;
+  const connectors = (text.match(/\b(however|therefore|moreover|for example|in contrast|as a result|in conclusion|although)\b/gi) || []).length;
+  const opinion = /\b(I believe|I think|in my opinion|my view|I agree|I disagree)\b/i.test(text);
+  let score = 4.5;
+  if (words.length >= 180) score += 0.8;
+  if (words.length >= 250) score += 0.7;
+  if (paragraphs >= 3) score += 0.7;
+  if (connectors >= 4) score += 0.7;
+  if (opinion) score += 0.6;
+  const band = Math.min(8, Math.round(score * 2) / 2).toFixed(1);
+  const advice = [];
+  if (words.length < 250) advice.push("Task 2 建议写到 250 词以上。");
+  if (paragraphs < 3) advice.push("建议分成引言、主体段、结论，结构更清晰。");
+  if (connectors < 4) advice.push("增加 however / moreover / for example / in conclusion 等连接表达。");
+  if (!opinion) advice.push("需要明确写出自己的观点。");
+  if (advice.length === 0) advice.push("结构完整，下一步可以提升例子质量和词汇准确性。");
+  return { band, summary: `共 ${words.length} 词，${paragraphs} 个主要段落，检测到 ${connectors} 个连接表达。`, advice };
 }
 
 function handleFileSelect(event) {
@@ -1589,9 +1828,10 @@ function speakWord(word) {
   utterance.lang = state.settings.voiceLang;
   utterance.rate = Number(state.settings.speechRate);
 
-  const preferredVoice = state.voices.find((voice) => voice.lang === state.settings.voiceLang);
+  const preferredVoice = getPreferredVoice();
   if (preferredVoice) {
     utterance.voice = preferredVoice;
+    utterance.lang = preferredVoice.lang || state.settings.voiceLang;
   }
 
   utterance.onstart = () => {
@@ -1967,6 +2207,11 @@ document.addEventListener("click", (event) => {
   if (studyWord) {
     speakWord(studyWord);
   }
+
+  const ieltsSpeak = event.target.dataset.ieltsSpeak;
+  if (ieltsSpeak) {
+    speakWord(ieltsSpeak);
+  }
 });
 
 function retryWrongWords() {
@@ -2025,6 +2270,7 @@ function stopTimer() {
 
 function renderSettings() {
   els.voiceLang.value = state.settings.voiceLang;
+  renderVoiceOptions();
   els.speechRate.value = state.settings.speechRate;
   els.autoSpeak.checked = state.settings.autoSpeak;
   els.shuffleWords.checked = state.settings.shuffleWords;
@@ -2037,6 +2283,7 @@ function renderSettings() {
 function saveSettingsFromForm() {
   state.settings = {
     voiceLang: els.voiceLang.value,
+    voiceName: els.voiceName.value,
     speechRate: els.speechRate.value,
     autoSpeak: els.autoSpeak.checked,
     shuffleWords: els.shuffleWords.checked,
@@ -2061,6 +2308,38 @@ function loadVoices() {
   if (!("speechSynthesis" in window)) return;
 
   state.voices = window.speechSynthesis.getVoices();
+  renderVoiceOptions();
+}
+
+function renderVoiceOptions() {
+  if (!els.voiceName) return;
+
+  const englishVoices = state.voices
+    .filter((voice) => /^en[-_]/i.test(voice.lang))
+    .sort((a, b) => `${a.lang} ${a.name}`.localeCompare(`${b.lang} ${b.name}`));
+  const savedName = state.settings.voiceName || "";
+  els.voiceName.innerHTML = [
+    `<option value="">自动选择英文发音人</option>`,
+    ...englishVoices.map((voice) => {
+      const label = `${voice.name}（${voice.lang}${voice.localService ? "，本机" : ""}）`;
+      return `<option value="${escapeHtml(voice.name)}">${escapeHtml(label)}</option>`;
+    }),
+  ].join("");
+  const hasSaved = englishVoices.some((voice) => voice.name === savedName);
+  els.voiceName.value = hasSaved ? savedName : "";
+}
+
+function getPreferredVoice() {
+  const selectedName = state.settings.voiceName;
+  if (selectedName) {
+    const selectedVoice = state.voices.find((voice) => voice.name === selectedName);
+    if (selectedVoice) return selectedVoice;
+  }
+
+  return (
+    state.voices.find((voice) => voice.lang === state.settings.voiceLang) ||
+    state.voices.find((voice) => /^en[-_]/i.test(voice.lang))
+  );
 }
 
 function saveWords() {
