@@ -2,6 +2,7 @@ const STORAGE_KEYS = {
   words: "dictation.words.v1",
   history: "dictation.history.v1",
   settings: "dictation.settings.v1",
+  game: "dictation.game.v1",
 };
 
 const DEFAULT_SETTINGS = {
@@ -252,6 +253,13 @@ const state = {
   words: loadJson(STORAGE_KEYS.words, []),
   history: loadJson(STORAGE_KEYS.history, []),
   settings: { ...DEFAULT_SETTINGS, ...loadJson(STORAGE_KEYS.settings, {}) },
+  game: {
+    xp: 0,
+    stars: 0,
+    rounds: 0,
+    bestCombo: 0,
+    ...loadJson(STORAGE_KEYS.game, {}),
+  },
   fileText: "",
   practice: null,
   lastResult: null,
@@ -273,6 +281,15 @@ const els = {
   fileName: document.querySelector("#fileName"),
   importButton: document.querySelector("#importButton"),
   startButton: document.querySelector("#startButton"),
+  heroGameLevel: document.querySelector("#heroGameLevel"),
+  heroGameTitle: document.querySelector("#heroGameTitle"),
+  gameSummary: document.querySelector("#gameSummary"),
+  gameLevelText: document.querySelector("#gameLevelText"),
+  gameXpText: document.querySelector("#gameXpText"),
+  gameXpBar: document.querySelector("#gameXpBar"),
+  gameStarsText: document.querySelector("#gameStarsText"),
+  gameBestComboText: document.querySelector("#gameBestComboText"),
+  gameRoundsText: document.querySelector("#gameRoundsText"),
   importMessage: document.querySelector("#importMessage"),
   wordCount: document.querySelector("#wordCount"),
   recentRate: document.querySelector("#recentRate"),
@@ -287,6 +304,9 @@ const els = {
   stagePill: document.querySelector("#stagePill"),
   streakText: document.querySelector("#streakText"),
   masteredText: document.querySelector("#masteredText"),
+  livesText: document.querySelector("#livesText"),
+  scoreText: document.querySelector("#scoreText"),
+  comboText: document.querySelector("#comboText"),
   progressText: document.querySelector("#progressText"),
   progressBar: document.querySelector("#progressBar"),
   timerText: document.querySelector("#timerText"),
@@ -305,6 +325,7 @@ const els = {
   durationStat: document.querySelector("#durationStat"),
   masteryMessage: document.querySelector("#masteryMessage"),
   levelBadge: document.querySelector("#levelBadge"),
+  rewardBox: document.querySelector("#rewardBox"),
   retryAllButton: document.querySelector("#retryAllButton"),
   retryWrongButton: document.querySelector("#retryWrongButton"),
   exportWrongButton: document.querySelector("#exportWrongButton"),
@@ -586,8 +607,36 @@ function parsePlainLine(line) {
 function renderHome() {
   els.wordCount.textContent = String(state.words.length);
   renderDashboard();
+  renderGamePanel();
   renderWordList();
   renderHistory();
+}
+
+function renderGamePanel() {
+  const profile = getGameProfile(state.game.xp);
+  els.heroGameLevel.textContent = `Lv.${profile.level}`;
+  els.heroGameTitle.textContent = profile.title;
+  els.gameLevelText.textContent = `Lv.${profile.level} ${profile.title}`;
+  els.gameXpText.textContent = `${profile.currentXp} / ${profile.nextXp} XP`;
+  els.gameXpBar.style.width = `${profile.percent}%`;
+  els.gameStarsText.textContent = `⭐ ${state.game.stars} 星`;
+  els.gameBestComboText.textContent = `🔥 最佳连击 ${state.game.bestCombo}`;
+  els.gameRoundsText.textContent = `🎮 已完成 ${state.game.rounds} 局`;
+  els.gameSummary.textContent =
+    profile.level >= 5 ? "已经是高级冒险者了，试试雅思计划里的高阶词。" : "答对单词获得经验和星星，连击越高奖励越多。";
+}
+
+function getGameProfile(totalXp) {
+  const level = Math.floor(totalXp / 100) + 1;
+  const currentXp = totalXp % 100;
+  const titles = ["单词新手", "听音勇士", "拼写高手", "连击达人", "词汇冒险家", "雅思挑战者"];
+  return {
+    level,
+    currentXp,
+    nextXp: 100,
+    percent: currentXp,
+    title: titles[Math.min(level - 1, titles.length - 1)],
+  };
 }
 
 function renderDashboard() {
@@ -722,6 +771,11 @@ function startPractice(words, isRetryWrong) {
     waitingForNext: false,
     streak: 0,
     bestStreak: 0,
+    lives: 3,
+    score: 0,
+    combo: 1,
+    earnedXp: 0,
+    earnedStars: 0,
   };
 
   els.feedbackBox.className = "feedback hidden";
@@ -747,6 +801,9 @@ function renderPractice() {
   els.stagePill.textContent = `第 ${currentNumber} 关`;
   els.streakText.textContent = `🔥 连对 ${practice.streak} 个`;
   els.masteredText.textContent = `已掌握 ${practice.correct} 个`;
+  els.livesText.textContent = `${"❤️".repeat(Math.max(practice.lives, 0))}${"🤍".repeat(Math.max(3 - practice.lives, 0))}`;
+  els.scoreText.textContent = `⭐ ${practice.score}`;
+  els.comboText.textContent = `⚡ x${practice.combo}`;
   els.progressText.textContent = `第 ${currentNumber} / ${practice.words.length} 个`;
   els.progressBar.style.width = `${percent}%`;
   els.timerText.textContent = formatDuration(practice.elapsedSeconds);
@@ -806,12 +863,18 @@ function handleSubmitAnswer(event) {
     practice.correct += 1;
     practice.streak += 1;
     practice.bestStreak = Math.max(practice.bestStreak, practice.streak);
+    practice.combo = Math.min(5, 1 + Math.floor(practice.streak / 3));
+    practice.score += 10 * practice.combo;
+    practice.earnedXp += 8 * practice.combo;
+    practice.earnedStars += 1 * practice.combo;
     showCorrectFeedback();
     setTimeout(goNextWord, 450);
     return;
   }
 
   practice.streak = 0;
+  practice.combo = 1;
+  practice.lives = Math.max(0, practice.lives - 1);
   recordWrong(current, answer || "未填写");
   showWrongFeedback(current, answer || "未填写");
 }
@@ -822,6 +885,8 @@ function handleSkip() {
 
   const current = practice.words[practice.index];
   practice.streak = 0;
+  practice.combo = 1;
+  practice.lives = Math.max(0, practice.lives - 1);
   recordWrong(current, "已跳过");
   showWrongFeedback(current, "已跳过");
 }
@@ -830,7 +895,7 @@ function showCorrectFeedback() {
   const practice = state.practice;
   practice.waitingForNext = true;
   els.feedbackBox.className = "feedback correct";
-  els.feedbackBox.innerHTML = `<strong>✅ 答对啦！</strong><p>连对 ${practice.streak} 个，继续保持。</p>`;
+  els.feedbackBox.innerHTML = `<strong>✅ 命中！+${10 * practice.combo} 星分</strong><p>连对 ${practice.streak} 个，当前奖励倍率 x${practice.combo}。</p>`;
   els.answerInput.disabled = true;
   els.skipButton.disabled = true;
 }
@@ -840,7 +905,7 @@ function showWrongFeedback(wordItem, answer) {
   practice.waitingForNext = true;
   els.feedbackBox.className = "feedback wrong";
   els.feedbackBox.innerHTML = `
-    <strong>💡 差一点，再听一次</strong>
+    <strong>💡 生命 -1，再听一次</strong>
     <p>你的答案：${escapeHtml(answer)}</p>
     <p>正确答案：${escapeHtml(wordItem.word)}</p>
     ${wordItem.meaning ? `<p>中文释义：${escapeHtml(wordItem.meaning)}</p>` : ""}
@@ -903,16 +968,40 @@ function finishPractice() {
     durationSeconds: Math.max(1, Math.round((Date.now() - practice.startedAt) / 1000)),
     isRetryWrong: practice.isRetryWrong,
     bestStreak: practice.bestStreak,
+    score: practice.score,
+    earnedXp: calculateRoundXp(practice, rate),
+    earnedStars: calculateRoundStars(practice, rate),
+    remainingLives: practice.lives,
     wrongItems: practice.wrongItems,
   };
 
   state.lastResult = result;
+  applyGameReward(result);
   state.history.unshift(result);
   state.history = state.history.slice(0, 50);
   saveHistory();
   state.practice = null;
   renderResult();
   showView("result");
+}
+
+function calculateRoundXp(practice, rate) {
+  const clearBonus = rate === 100 ? 30 : 0;
+  const lifeBonus = practice.lives * 5;
+  return practice.earnedXp + clearBonus + lifeBonus;
+}
+
+function calculateRoundStars(practice, rate) {
+  const clearBonus = rate === 100 ? 10 : 0;
+  return practice.earnedStars + clearBonus;
+}
+
+function applyGameReward(result) {
+  state.game.xp += result.earnedXp;
+  state.game.stars += result.earnedStars;
+  state.game.rounds += 1;
+  state.game.bestCombo = Math.max(state.game.bestCombo, result.bestStreak || 0);
+  saveGame();
 }
 
 function renderResult() {
@@ -929,6 +1018,12 @@ function renderResult() {
   els.levelBadge.style.setProperty("--level-color", level.color);
   els.resultTitle.textContent = `${level.name}`;
   els.masteryMessage.textContent = getResultMessage(result, level);
+  els.rewardBox.innerHTML = `
+    <div class="reward-item"><span>本局星分</span><strong>⭐ ${result.score || 0}</strong></div>
+    <div class="reward-item"><span>获得经验</span><strong>+${result.earnedXp || 0} XP</strong></div>
+    <div class="reward-item"><span>获得星星</span><strong>+${result.earnedStars || 0}</strong></div>
+    <div class="reward-item"><span>剩余生命</span><strong>${"❤️".repeat(result.remainingLives || 0) || "0"}</strong></div>
+  `;
   els.retryWrongButton.disabled = result.wrongItems.length === 0;
   els.exportWrongButton.disabled = result.wrongItems.length === 0;
   renderResultWrongList();
@@ -948,7 +1043,7 @@ function getResultMessage(result, level) {
   }
 
   if (result.wrong === 0) {
-    return `太棒了，本轮 ${result.total} 个词全部答对，最高连对 ${result.bestStreak || result.correct} 个。`;
+    return `太棒了，本轮 ${result.total} 个词全部答对，最高连对 ${result.bestStreak || result.correct} 个，奖励已到账。`;
   }
 
   return `${level.name}，本次错了 ${result.wrong} 个词，建议马上点“只听写错题”再巩固一轮。`;
@@ -1085,6 +1180,10 @@ function saveWords() {
 
 function saveHistory() {
   localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(state.history));
+}
+
+function saveGame() {
+  localStorage.setItem(STORAGE_KEYS.game, JSON.stringify(state.game));
 }
 
 function loadJson(key, fallback) {

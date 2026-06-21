@@ -32,13 +32,33 @@
               </div>
             </div>
             <div class="hero-prize" aria-hidden="true">
-              <span class="prize-label">完成奖励</span>
-              <strong>🏆 S 级</strong>
-              <small>全对即可解锁</small>
+              <span class="prize-label">玩家等级</span>
+              <strong id="heroGameLevel">Lv.1</strong>
+              <small id="heroGameTitle">单词新手</small>
             </div>
             <div class="hero-actions">
-              <button id="startButton" class="big-start-button" type="button">▶ 开始闯关</button>
+              <button id="startButton" class="big-start-button" type="button">▶ 开始冒险</button>
               <button class="ghost-button" data-view-button="settings" type="button">调整设置</button>
+            </div>
+          </section>
+
+          <section class="game-panel panel" aria-label="游戏进度">
+            <div>
+              <p class="panel-kicker">WORD QUEST</p>
+              <h2>单词冒险进度</h2>
+              <p id="gameSummary">答对单词获得经验和星星，连击越高奖励越多。</p>
+            </div>
+            <div class="xp-wrap">
+              <div class="xp-label">
+                <span id="gameLevelText">Lv.1 单词新手</span>
+                <strong id="gameXpText">0 / 100 XP</strong>
+              </div>
+              <div class="xp-track"><div id="gameXpBar" class="xp-bar"></div></div>
+            </div>
+            <div class="game-badges">
+              <span id="gameStarsText">⭐ 0 星</span>
+              <span id="gameBestComboText">🔥 最佳连击 0</span>
+              <span id="gameRoundsText">🎮 已完成 0 局</span>
             </div>
           </section>
 
@@ -133,6 +153,12 @@
               <span id="masteredText">已掌握 0 个</span>
             </div>
 
+            <div class="game-hud" aria-label="本局冒险状态">
+              <span id="livesText">❤️❤️❤️</span>
+              <span id="scoreText">⭐ 0</span>
+              <span id="comboText">⚡ x1</span>
+            </div>
+
             <div class="progress-wrap" aria-label="听写进度">
               <div class="progress-label">
                 <span id="progressText">第 0 / 0 个</span>
@@ -178,6 +204,7 @@
               <div class="stat-card"><span>正确率</span><strong id="rateStat">0%</strong></div>
               <div class="stat-card"><span>本次用时</span><strong id="durationStat">00:00</strong></div>
             </div>
+            <div id="rewardBox" class="reward-box"></div>
             <div class="button-row result-actions">
               <button id="retryAllButton" class="primary-button" type="button">重新听写全部单词</button>
               <button id="retryWrongButton" class="success-button" type="button">只听写错题</button>
