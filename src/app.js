@@ -37,12 +37,18 @@ const els = {
   startButton: document.querySelector("#startButton"),
   importMessage: document.querySelector("#importMessage"),
   wordCount: document.querySelector("#wordCount"),
+  recentRate: document.querySelector("#recentRate"),
+  bestLevel: document.querySelector("#bestLevel"),
+  recentWrongCount: document.querySelector("#recentWrongCount"),
   wordList: document.querySelector("#wordList"),
   clearWordsButton: document.querySelector("#clearWordsButton"),
   historyList: document.querySelector("#historyList"),
   clearHistoryButton: document.querySelector("#clearHistoryButton"),
   speechSupportMessage: document.querySelector("#speechSupportMessage"),
   practiceModeText: document.querySelector("#practiceModeText"),
+  stagePill: document.querySelector("#stagePill"),
+  streakText: document.querySelector("#streakText"),
+  masteredText: document.querySelector("#masteredText"),
   progressText: document.querySelector("#progressText"),
   progressBar: document.querySelector("#progressBar"),
   timerText: document.querySelector("#timerText"),
@@ -53,12 +59,14 @@ const els = {
   skipButton: document.querySelector("#skipButton"),
   exitPracticeButton: document.querySelector("#exitPracticeButton"),
   feedbackBox: document.querySelector("#feedbackBox"),
+  resultTitle: document.querySelector("#resultTitle"),
   totalStat: document.querySelector("#totalStat"),
   correctStat: document.querySelector("#correctStat"),
   wrongStat: document.querySelector("#wrongStat"),
   rateStat: document.querySelector("#rateStat"),
   durationStat: document.querySelector("#durationStat"),
   masteryMessage: document.querySelector("#masteryMessage"),
+  levelBadge: document.querySelector("#levelBadge"),
   retryAllButton: document.querySelector("#retryAllButton"),
   retryWrongButton: document.querySelector("#retryWrongButton"),
   exportWrongButton: document.querySelector("#exportWrongButton"),
@@ -244,8 +252,20 @@ function parsePlainLine(line) {
 
 function renderHome() {
   els.wordCount.textContent = String(state.words.length);
+  renderDashboard();
   renderWordList();
   renderHistory();
+}
+
+function renderDashboard() {
+  const recent = state.history[0];
+  const best = state.history.reduce((winner, item) => (item.rate > winner.rate ? item : winner), {
+    rate: -1,
+  });
+
+  els.recentRate.textContent = recent ? `${recent.rate}%` : "--";
+  els.recentWrongCount.textContent = recent ? String(recent.wrong) : "0";
+  els.bestLevel.textContent = best.rate >= 0 ? getLevelInfo(best.rate).name : "未开始";
 }
 
 function renderWordList() {
@@ -264,7 +284,10 @@ function renderWordList() {
             <strong>${escapeHtml(item.word)}</strong>
             <span>${escapeHtml(item.meaning || "无中文释义")}</span>
           </div>
-          <button class="danger-link" data-delete-word="${item.id}" type="button">删除</button>
+          <div class="word-actions">
+            <button class="icon-button" data-speak-word="${item.id}" type="button" title="听音">🔊</button>
+            <button class="danger-link" data-delete-word="${item.id}" type="button">删除</button>
+          </div>
         </div>
       `,
     )
@@ -272,6 +295,13 @@ function renderWordList() {
 }
 
 function handleWordListClick(event) {
+  const speakId = event.target.dataset.speakWord;
+  if (speakId) {
+    const word = state.words.find((item) => item.id === speakId);
+    if (word) speakWord(word.word);
+    return;
+  }
+
   const id = event.target.dataset.deleteWord;
   if (!id) return;
 
@@ -357,6 +387,8 @@ function startPractice(words, isRetryWrong) {
     startedAt: Date.now(),
     elapsedSeconds: 0,
     waitingForNext: false,
+    streak: 0,
+    bestStreak: 0,
   };
 
   els.feedbackBox.className = "feedback hidden";
@@ -379,6 +411,9 @@ function renderPractice() {
   const percent = practice.words.length ? (practice.index / practice.words.length) * 100 : 0;
 
   els.practiceModeText.textContent = practice.isRetryWrong ? "错题重练" : "全部单词";
+  els.stagePill.textContent = `第 ${currentNumber} 关`;
+  els.streakText.textContent = `🔥 连对 ${practice.streak} 个`;
+  els.masteredText.textContent = `已掌握 ${practice.correct} 个`;
   els.progressText.textContent = `第 ${currentNumber} / ${practice.words.length} 个`;
   els.progressBar.style.width = `${percent}%`;
   els.timerText.textContent = formatDuration(practice.elapsedSeconds);
@@ -436,11 +471,14 @@ function handleSubmitAnswer(event) {
 
   if (isCorrect) {
     practice.correct += 1;
+    practice.streak += 1;
+    practice.bestStreak = Math.max(practice.bestStreak, practice.streak);
     showCorrectFeedback();
     setTimeout(goNextWord, 450);
     return;
   }
 
+  practice.streak = 0;
   recordWrong(current, answer || "未填写");
   showWrongFeedback(current, answer || "未填写");
 }
@@ -450,6 +488,7 @@ function handleSkip() {
   if (!practice || practice.waitingForNext) return;
 
   const current = practice.words[practice.index];
+  practice.streak = 0;
   recordWrong(current, "已跳过");
   showWrongFeedback(current, "已跳过");
 }
@@ -458,7 +497,7 @@ function showCorrectFeedback() {
   const practice = state.practice;
   practice.waitingForNext = true;
   els.feedbackBox.className = "feedback correct";
-  els.feedbackBox.innerHTML = "<strong>正确</strong>";
+  els.feedbackBox.innerHTML = `<strong>✅ 答对啦！</strong><p>连对 ${practice.streak} 个，继续保持。</p>`;
   els.answerInput.disabled = true;
   els.skipButton.disabled = true;
 }
@@ -468,7 +507,7 @@ function showWrongFeedback(wordItem, answer) {
   practice.waitingForNext = true;
   els.feedbackBox.className = "feedback wrong";
   els.feedbackBox.innerHTML = `
-    <strong>错误</strong>
+    <strong>💡 差一点，再听一次</strong>
     <p>你的答案：${escapeHtml(answer)}</p>
     <p>正确答案：${escapeHtml(wordItem.word)}</p>
     ${wordItem.meaning ? `<p>中文释义：${escapeHtml(wordItem.meaning)}</p>` : ""}
@@ -530,6 +569,7 @@ function finishPractice() {
     rate,
     durationSeconds: Math.max(1, Math.round((Date.now() - practice.startedAt) / 1000)),
     isRetryWrong: practice.isRetryWrong,
+    bestStreak: practice.bestStreak,
     wrongItems: practice.wrongItems,
   };
 
@@ -551,11 +591,34 @@ function renderResult() {
   els.wrongStat.textContent = String(result.wrong);
   els.rateStat.textContent = `${result.rate}%`;
   els.durationStat.textContent = formatDuration(result.durationSeconds);
-  els.masteryMessage.textContent =
-    result.isRetryWrong && result.wrong === 0 ? "这次错题已经全部掌握" : "";
+  const level = getLevelInfo(result.rate);
+  els.levelBadge.textContent = level.icon;
+  els.levelBadge.style.setProperty("--level-color", level.color);
+  els.resultTitle.textContent = `${level.name}`;
+  els.masteryMessage.textContent = getResultMessage(result, level);
   els.retryWrongButton.disabled = result.wrongItems.length === 0;
   els.exportWrongButton.disabled = result.wrongItems.length === 0;
   renderResultWrongList();
+}
+
+function getLevelInfo(rate) {
+  if (rate === 100) return { name: "S 级完美掌握", icon: "🏆", color: "#f59e0b" };
+  if (rate >= 90) return { name: "A 级状态很好", icon: "⭐", color: "#2563eb" };
+  if (rate >= 75) return { name: "B 级大部分掌握", icon: "🌟", color: "#14804a" };
+  if (rate >= 60) return { name: "C 级继续加油", icon: "💪", color: "#b45309" };
+  return { name: "D 级先练错题", icon: "🧩", color: "#dc2626" };
+}
+
+function getResultMessage(result, level) {
+  if (result.isRetryWrong && result.wrong === 0) {
+    return "这次错题已经全部掌握。";
+  }
+
+  if (result.wrong === 0) {
+    return `太棒了，本轮 ${result.total} 个词全部答对，最高连对 ${result.bestStreak || result.correct} 个。`;
+  }
+
+  return `${level.name}，本次错了 ${result.wrong} 个词，建议马上点“只听写错题”再巩固一轮。`;
 }
 
 function renderResultWrongList() {

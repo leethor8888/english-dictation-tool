@@ -10,7 +10,7 @@
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">本地版</p>
+          <p class="eyebrow">⭐ 本地学习版</p>
           <h1 id="pageTitle">英语单词听写工具</h1>
         </div>
         <nav class="top-actions" aria-label="页面导航">
@@ -21,11 +21,45 @@
 
       <main>
         <section id="homeView" class="view active" aria-labelledby="homeTitle">
+          <section class="hero-panel">
+            <div class="hero-copy">
+              <span class="hero-icon" aria-hidden="true">🎧</span>
+              <div>
+                <p class="eyebrow">今天也来闯几关</p>
+                <h2 id="homeTitle">听音、拼写、拿到掌握等级</h2>
+                <p>适合学生自己练，也适合家长陪练。单词和成绩只保存在这台设备里。</p>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button id="startButton" class="big-start-button" type="button">▶ 开始听写</button>
+              <button class="ghost-button" data-view-button="settings" type="button">调整设置</button>
+            </div>
+          </section>
+
+          <section class="dashboard-grid" aria-label="学习概览">
+            <div class="dashboard-card">
+              <span>📚 单词总数</span>
+              <strong id="wordCount">0</strong>
+            </div>
+            <div class="dashboard-card">
+              <span>🎯 最近正确率</span>
+              <strong id="recentRate">--</strong>
+            </div>
+            <div class="dashboard-card">
+              <span>🏆 最高等级</span>
+              <strong id="bestLevel">未开始</strong>
+            </div>
+            <div class="dashboard-card">
+              <span>🧩 最近错题</span>
+              <strong id="recentWrongCount">0</strong>
+            </div>
+          </section>
+
           <div class="layout-grid">
             <section class="panel import-panel">
               <div class="section-head">
                 <div>
-                  <h2 id="homeTitle">导入单词本</h2>
+                  <h2>导入单词本</h2>
                   <p>支持每行一个单词、英文加中文释义、TXT 和 CSV。</p>
                 </div>
               </div>
@@ -39,7 +73,6 @@
               </div>
               <div class="button-row">
                 <button id="importButton" class="primary-button" type="button">导入单词</button>
-                <button id="startButton" class="success-button" type="button">开始听写</button>
               </div>
               <p id="importMessage" class="message" role="status"></p>
             </section>
@@ -48,7 +81,7 @@
               <div class="section-head">
                 <div>
                   <h2>当前单词本</h2>
-                  <p><span id="wordCount">0</span> 个单词，刷新后仍会保留。</p>
+                  <p>可以给每个词单独听音，也可以删除不需要的词。</p>
                 </div>
                 <button id="clearWordsButton" class="danger-link" type="button">清空</button>
               </div>
@@ -80,10 +113,16 @@
           <section class="practice-card">
             <div class="practice-top">
               <div>
-                <h2 id="practiceTitle">听写中</h2>
+                <p class="stage-pill" id="stagePill">第 1 关</p>
+                <h2 id="practiceTitle">听写闯关</h2>
                 <p id="practiceModeText">全部单词</p>
               </div>
               <button id="exitPracticeButton" class="ghost-button" type="button">退出本次听写</button>
+            </div>
+
+            <div class="practice-status">
+              <span id="streakText">🔥 连对 0 个</span>
+              <span id="masteredText">已掌握 0 个</span>
             </div>
 
             <div class="progress-wrap" aria-label="听写进度">
@@ -97,7 +136,7 @@
             </div>
 
             <div class="listen-zone">
-              <button id="speakButton" class="listen-button" type="button">听音</button>
+              <button id="speakButton" class="listen-button" type="button">🔊 听音</button>
               <span id="speakStatus" class="speak-status" aria-live="polite"></span>
             </div>
 
@@ -116,8 +155,10 @@
 
         <section id="resultView" class="view" aria-labelledby="resultTitle">
           <section class="panel result-panel">
-            <div class="section-head">
+            <div class="result-hero">
+              <div class="level-badge" id="levelBadge">⭐</div>
               <div>
+                <p class="eyebrow">本次等级</p>
                 <h2 id="resultTitle">听写结果</h2>
                 <p id="masteryMessage"></p>
               </div>
