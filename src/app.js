@@ -5,6 +5,26 @@ const STORAGE_KEYS = {
   game: "dictation.game.v1",
 };
 
+const MINI_GAME_CONFIG = {
+  choice: { title: "听音选词", hint: "听一遍，从 4 个选项里选出正确单词。", size: 6 },
+  spell: { title: "拼字掉落", hint: "听声音，按顺序点击字母拼出单词。", size: 5 },
+  match: { title: "单词配对", hint: "先点英文，再点对应中文释义。", size: 6 },
+  timed: { title: "限时连击", hint: "60 秒内听写尽量多单词，连击会加分。", size: 999 },
+  sentence: { title: "句子补词", hint: "根据句子和中文提示，填入正确单词。", size: 6 },
+  sound: { title: "发音小侦探", hint: "听近音词，选择你听到的那个。", size: 6 },
+};
+
+const SOUND_PAIRS = [
+  ["ship", "sheep", "船；羊"],
+  ["live", "leave", "居住；离开"],
+  ["sit", "seat", "坐；座位"],
+  ["full", "fool", "满的；傻瓜"],
+  ["bed", "bad", "床；坏的"],
+  ["hit", "heat", "击打；热量"],
+  ["pull", "pool", "拉；水池"],
+  ["walk", "work", "走路；工作"],
+];
+
 const DEFAULT_SETTINGS = {
   voiceLang: "en-US",
   speechRate: "1",
@@ -349,10 +369,13 @@ const state = {
     stars: 0,
     rounds: 0,
     bestCombo: 0,
+    garden: {},
     ...loadJson(STORAGE_KEYS.game, {}),
   },
   fileText: "",
   practice: null,
+  miniGame: null,
+  miniGameTimerId: null,
   lastResult: null,
   timerId: null,
   voices: [],
@@ -365,6 +388,7 @@ const els = {
     practice: document.querySelector("#practiceView"),
     result: document.querySelector("#resultView"),
     ielts: document.querySelector("#ieltsView"),
+    games: document.querySelector("#gamesView"),
     settings: document.querySelector("#settingsView"),
   },
   importText: document.querySelector("#importText"),
@@ -430,6 +454,21 @@ const els = {
   exportWrongButton: document.querySelector("#exportWrongButton"),
   backHomeButton: document.querySelector("#backHomeButton"),
   resultWrongList: document.querySelector("#resultWrongList"),
+  gameMenu: document.querySelector("#gameMenu"),
+  miniGameStage: document.querySelector("#miniGameStage"),
+  miniGameKicker: document.querySelector("#miniGameKicker"),
+  miniGameTitle: document.querySelector("#miniGameTitle"),
+  miniGameHint: document.querySelector("#miniGameHint"),
+  miniGameProgress: document.querySelector("#miniGameProgress"),
+  miniGameScore: document.querySelector("#miniGameScore"),
+  miniGameCombo: document.querySelector("#miniGameCombo"),
+  miniGameTimer: document.querySelector("#miniGameTimer"),
+  miniGamePlayArea: document.querySelector("#miniGamePlayArea"),
+  miniGameFeedback: document.querySelector("#miniGameFeedback"),
+  exitMiniGameButton: document.querySelector("#exitMiniGameButton"),
+  wrongGardenList: document.querySelector("#wrongGardenList"),
+  gardenMasteredCount: document.querySelector("#gardenMasteredCount"),
+  gardenReviewCount: document.querySelector("#gardenReviewCount"),
   ieltsBandSelect: document.querySelector("#ieltsBandSelect"),
   ieltsBandTitle: document.querySelector("#ieltsBandTitle"),
   ieltsVocabSize: document.querySelector("#ieltsVocabSize"),
@@ -486,6 +525,10 @@ function bindEvents() {
   els.exportWrongButton.addEventListener("click", exportWrongWords);
   els.backHomeButton.addEventListener("click", () => showView("home"));
   els.resultWrongList.addEventListener("click", handleResultWrongClick);
+  els.gameMenu.addEventListener("click", handleMiniGameMenuClick);
+  els.miniGamePlayArea.addEventListener("click", handleMiniGameClick);
+  els.exitMiniGameButton.addEventListener("click", exitMiniGame);
+  els.wrongGardenList.addEventListener("click", handleGardenClick);
   els.ieltsBandSelect.addEventListener("change", renderIeltsPlan);
   els.ieltsDailyCount.addEventListener("change", () => {
     state.settings.ieltsDailyCount = els.ieltsDailyCount.value;
@@ -505,6 +548,9 @@ function bindEvents() {
 }
 
 function showView(viewName) {
+  if (viewName !== "games") {
+    stopMiniGameTimer();
+  }
   Object.entries(els.views).forEach(([name, node]) => {
     node.classList.toggle("active", name === viewName);
   });
@@ -515,12 +561,16 @@ function showView(viewName) {
     practice: "听写练习",
     result: "听写结果",
     ielts: "雅思词汇计划",
+    games: "英语小游戏",
     settings: "设置",
   };
   els.pageTitle.textContent = titles[viewName] || titles.home;
 
   if (viewName === "home") {
     renderHome();
+  }
+  if (viewName === "games") {
+    renderGameCenter();
   }
 }
 
@@ -784,6 +834,444 @@ function startTrialPractice() {
   startPractice(TRIAL_WORDS, false);
 }
 
+function renderGameCenter() {
+  els.gameMenu.classList.remove("hidden");
+  els.miniGameStage.classList.add("hidden");
+  renderWrongGarden();
+}
+
+function handleMiniGameMenuClick(event) {
+  const button = event.target.closest("[data-mini-game]");
+  if (!button) return;
+
+  startMiniGame(button.dataset.miniGame);
+}
+
+function startMiniGame(type) {
+  const config = MINI_GAME_CONFIG[type];
+  if (!config) return;
+
+  const sourceWords = getGameWords(type);
+  if (sourceWords.length === 0) {
+    alert("请先导入单词本，或者使用试试 5 个单词。");
+    return;
+  }
+
+  stopMiniGameTimer();
+  const words = type === "sound"
+    ? buildSoundQuestions(config.size)
+    : shuffle([...sourceWords]).slice(0, Math.min(config.size, sourceWords.length));
+  state.miniGame = {
+    type,
+    words,
+    index: 0,
+    correct: 0,
+    wrong: 0,
+    score: 0,
+    combo: 0,
+    bestCombo: 0,
+    startedAt: Date.now(),
+    remainingSeconds: type === "timed" ? 60 : null,
+    selectedWord: null,
+    selectedMeaning: null,
+    builtAnswer: "",
+    completedPairs: [],
+    currentCorrectWord: "",
+  };
+
+  els.gameMenu.classList.add("hidden");
+  els.miniGameStage.classList.remove("hidden");
+  els.miniGameTitle.textContent = config.title;
+  els.miniGameHint.textContent = config.hint;
+  els.miniGameFeedback.className = "mini-game-feedback hidden";
+
+  if (type === "timed") {
+    startMiniGameTimer();
+  }
+
+  renderMiniGameRound();
+  els.miniGameStage.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function getGameWords(type) {
+  if (type === "sound") return SOUND_PAIRS.map(([word, other, meaning]) => ({ word, meaning, other }));
+  const merged = uniqueWords([...state.words, ...getSelectedIeltsDailyWords(), ...TRIAL_WORDS]);
+  return merged.filter((item) => item.word);
+}
+
+function buildSoundQuestions(size) {
+  return shuffle([...SOUND_PAIRS]).slice(0, size).map(([first, second, meaning]) => {
+    const answer = Math.random() > 0.5 ? first : second;
+    return { word: answer, meaning, options: shuffle([first, second]) };
+  });
+}
+
+function renderMiniGameRound() {
+  const game = state.miniGame;
+  if (!game) return;
+
+  const config = MINI_GAME_CONFIG[game.type];
+  const current = game.words[game.index];
+  els.miniGameKicker.textContent =
+    game.type === "timed" ? "60 秒挑战" : `第 ${Math.min(game.index + 1, game.words.length)} 题`;
+  els.miniGameProgress.textContent =
+    game.type === "timed" ? `已答 ${game.correct + game.wrong}` : `${Math.min(game.index + 1, game.words.length)} / ${game.words.length}`;
+  els.miniGameScore.textContent = `⭐ ${game.score}`;
+  els.miniGameCombo.textContent = `连击 ${game.combo}`;
+  els.miniGameTimer.textContent = game.remainingSeconds === null ? "--" : `${game.remainingSeconds}s`;
+  els.miniGameFeedback.className = "mini-game-feedback hidden";
+  els.miniGameFeedback.innerHTML = "";
+
+  if (!current) {
+    finishMiniGame();
+    return;
+  }
+
+  if (game.type === "choice") renderChoiceGame(current);
+  if (game.type === "spell") renderSpellGame(current);
+  if (game.type === "match") renderMatchGame();
+  if (game.type === "timed") renderTimedGame(current);
+  if (game.type === "sentence") renderSentenceGame(current);
+  if (game.type === "sound") renderSoundGame(current);
+}
+
+function renderChoiceGame(current) {
+  const options = buildWordOptions(current);
+  els.miniGamePlayArea.innerHTML = `
+    <div class="sound-question">
+      <button class="listen-button compact-listen" data-mini-action="speak-current" type="button">🔊 听一遍</button>
+      <p>先点“听一遍”，再从下面 4 张卡里选答案。</p>
+    </div>
+    <div class="option-grid">
+      ${options.map((item) => `<button class="option-card" data-answer="${escapeHtml(item.word)}" type="button">${escapeHtml(item.word)}</button>`).join("")}
+    </div>
+  `;
+}
+
+function renderSpellGame(current) {
+  const letters = shuffle(current.word.toUpperCase().split(""));
+  state.miniGame.builtAnswer = "";
+  els.miniGamePlayArea.innerHTML = `
+    <div class="sound-question">
+      <button class="listen-button compact-listen" data-mini-action="speak-current" type="button">🔊 听一遍</button>
+      <p>先听音，再点击下面的字母拼出单词。</p>
+      <small>${escapeHtml(current.meaning || "拼出听到的单词")}</small>
+    </div>
+    <div id="spellAnswer" class="spell-answer">_ ${"_ ".repeat(Math.max(current.word.length - 1, 0))}</div>
+    <div class="letter-grid">
+      ${letters.map((letter, index) => `<button class="letter-tile" data-letter="${letter}" data-letter-index="${index}" type="button">${letter}</button>`).join("")}
+    </div>
+  `;
+}
+
+function renderMatchGame() {
+  const game = state.miniGame;
+  const words = game.words.slice(0, Math.min(6, game.words.length));
+  game.words = words;
+  const meanings = shuffle(words.map((item) => item.meaning || createFallbackMeaning(item.word)));
+  els.miniGameProgress.textContent = `${game.completedPairs.length} / ${words.length}`;
+  els.miniGamePlayArea.innerHTML = `
+    <div class="match-board">
+      <div>
+        <strong>英文</strong>
+        ${words.map((item) => `<button class="match-chip" data-match-word="${escapeHtml(item.word)}" type="button">${escapeHtml(item.word)}</button>`).join("")}
+      </div>
+      <div>
+        <strong>中文释义</strong>
+        ${meanings.map((meaning) => `<button class="match-chip" data-match-meaning="${escapeHtml(meaning)}" type="button">${escapeHtml(meaning)}</button>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderTimedGame(current) {
+  els.miniGamePlayArea.innerHTML = `
+    <div class="sound-question">
+      <button class="listen-button compact-listen" data-mini-action="speak-current" type="button">🔊 听一遍</button>
+      <p>点播放后输入听到的单词，60 秒内尽量多答。</p>
+    </div>
+    <form id="timedGameForm" class="mini-answer-form">
+      <input id="timedGameInput" type="text" autocomplete="off" spellcheck="false" placeholder="写下听到的单词" />
+      <button class="primary-button" type="submit">提交</button>
+    </form>
+  `;
+  document.querySelector("#timedGameForm").addEventListener("submit", handleTimedSubmit);
+  document.querySelector("#timedGameInput").focus();
+}
+
+function renderSentenceGame(current) {
+  els.miniGamePlayArea.innerHTML = `
+    <div class="sentence-card">
+      <p>${escapeHtml(createSentencePrompt(current.word))}</p>
+      <small>${escapeHtml(current.meaning || "根据句子填入英文单词")}</small>
+    </div>
+    <form id="sentenceGameForm" class="mini-answer-form">
+      <input id="sentenceGameInput" type="text" autocomplete="off" spellcheck="false" placeholder="填入缺少的单词" />
+      <button class="primary-button" type="submit">提交</button>
+    </form>
+  `;
+  document.querySelector("#sentenceGameForm").addEventListener("submit", handleSentenceSubmit);
+  document.querySelector("#sentenceGameInput").focus();
+}
+
+function renderSoundGame(current) {
+  els.miniGamePlayArea.innerHTML = `
+    <div class="sound-question">
+      <button class="listen-button compact-listen" data-mini-action="speak-current" type="button">🔊 听一遍</button>
+      <p>点播放后分辨近音词，选你听到的那个。</p>
+      <small>${escapeHtml(current.meaning)}</small>
+    </div>
+    <div class="option-grid two-options">
+      ${current.options.map((word) => `<button class="option-card" data-answer="${escapeHtml(word)}" type="button">${escapeHtml(word)}</button>`).join("")}
+    </div>
+  `;
+}
+
+function handleMiniGameClick(event) {
+  const game = state.miniGame;
+  const replayType = event.target.closest("[data-mini-game]")?.dataset.miniGame;
+  if (replayType) {
+    startMiniGame(replayType);
+    return;
+  }
+  if (!game) return;
+
+  const action = event.target.dataset.miniAction;
+  if (action === "speak-current") {
+    speakMiniGameCurrent();
+    return;
+  }
+
+  const answer = event.target.dataset.answer;
+  if (answer) {
+    submitMiniAnswer(answer);
+    return;
+  }
+
+  const letter = event.target.dataset.letter;
+  if (letter) {
+    handleLetterClick(event.target, letter);
+    return;
+  }
+
+  const matchWord = event.target.dataset.matchWord;
+  if (matchWord) {
+    selectMatchWord(event.target, matchWord);
+    return;
+  }
+
+  const matchMeaning = event.target.dataset.matchMeaning;
+  if (matchMeaning) {
+    selectMatchMeaning(event.target, matchMeaning);
+  }
+}
+
+function speakMiniGameCurrent() {
+  const game = state.miniGame;
+  const current = game?.words[game.index];
+  if (current) speakWord(current.word);
+}
+
+function submitMiniAnswer(answer) {
+  const game = state.miniGame;
+  const current = game?.words[game.index];
+  if (!game || !current) return;
+
+  const correct = normalizeAnswer(answer) === normalizeAnswer(current.word);
+  handleMiniResult(correct, current, answer);
+}
+
+function handleLetterClick(button, letter) {
+  const game = state.miniGame;
+  const current = game?.words[game.index];
+  if (!game || !current) return;
+
+  button.disabled = true;
+  game.builtAnswer += letter.toLowerCase();
+  const padded = game.builtAnswer.padEnd(current.word.length, "_");
+  document.querySelector("#spellAnswer").textContent = padded.split("").join(" ");
+
+  if (game.builtAnswer.length >= current.word.length) {
+    handleMiniResult(normalizeAnswer(game.builtAnswer) === normalizeAnswer(current.word), current, game.builtAnswer);
+  }
+}
+
+function selectMatchWord(button, word) {
+  const game = state.miniGame;
+  if (!game) return;
+
+  document.querySelectorAll("[data-match-word]").forEach((node) => node.classList.remove("selected"));
+  button.classList.add("selected");
+  game.selectedWord = word;
+}
+
+function selectMatchMeaning(button, meaning) {
+  const game = state.miniGame;
+  if (!game || !game.selectedWord) return;
+
+  const item = game.words.find((wordItem) => normalizeAnswer(wordItem.word) === normalizeAnswer(game.selectedWord));
+  const expected = item?.meaning || createFallbackMeaning(item?.word || "");
+  const correct = normalizeAnswer(meaning) === normalizeAnswer(expected);
+  button.classList.toggle("selected", correct);
+
+  if (correct) {
+    game.completedPairs.push(game.selectedWord);
+    [...document.querySelectorAll("[data-match-word]")]
+      .find((node) => normalizeAnswer(node.dataset.matchWord) === normalizeAnswer(game.selectedWord))
+      ?.classList.add("matched");
+    button.classList.add("matched");
+    handleMiniScore(true, item);
+    showMiniFeedback(true, item, "配对成功，小花亮了一点。");
+    game.selectedWord = null;
+    els.miniGameProgress.textContent = `${game.completedPairs.length} / ${game.words.length}`;
+    if (game.completedPairs.length >= game.words.length) {
+      setTimeout(finishMiniGame, 450);
+    }
+    return;
+  }
+
+  handleMiniScore(false, item, meaning);
+  showMiniFeedback(false, item, "差一点，再找找对应的中文。");
+}
+
+function handleTimedSubmit(event) {
+  event.preventDefault();
+  const input = document.querySelector("#timedGameInput");
+  submitMiniAnswer(input.value);
+}
+
+function handleSentenceSubmit(event) {
+  event.preventDefault();
+  const input = document.querySelector("#sentenceGameInput");
+  submitMiniAnswer(input.value);
+}
+
+function handleMiniResult(correct, current, answer) {
+  handleMiniScore(correct, current, answer);
+  showMiniFeedback(correct, current);
+
+  if (state.miniGame.type === "timed") {
+    state.miniGame.index = (state.miniGame.index + 1) % state.miniGame.words.length;
+    setTimeout(renderMiniGameRound, correct ? 850 : 1100);
+    return;
+  }
+
+  state.miniGame.index += 1;
+  if (state.miniGame.index >= state.miniGame.words.length) {
+    setTimeout(finishMiniGame, 900);
+    return;
+  }
+
+  setTimeout(renderMiniGameRound, correct ? 900 : 1200);
+}
+
+function handleMiniScore(correct, current, answer = "") {
+  const game = state.miniGame;
+  if (!game) return;
+
+  if (correct) {
+    game.correct += 1;
+    game.combo += 1;
+    game.bestCombo = Math.max(game.bestCombo, game.combo);
+    game.score += 10 + Math.min(20, game.combo * 2);
+    markGardenCorrect(current);
+    playFeedbackSound("correct");
+    return;
+  }
+
+  game.wrong += 1;
+  game.combo = 0;
+  markGardenWrong(current, answer || "未填写");
+  playFeedbackSound("wrong");
+}
+
+function showMiniFeedback(correct, current, message) {
+  els.miniGameFeedback.className = `mini-game-feedback ${correct ? "correct" : "wrong"}`;
+  els.miniGameFeedback.innerHTML = correct
+    ? `<strong>答对啦！</strong><p>${escapeHtml(message || "这个词又熟了一点。")}</p>`
+    : `<strong>再听一次也没关系。</strong><p>正确答案：${escapeHtml(current.word)} ${current.meaning ? `｜${escapeHtml(current.meaning)}` : ""}</p>`;
+  els.miniGameScore.textContent = `⭐ ${state.miniGame.score}`;
+  els.miniGameCombo.textContent = `连击 ${state.miniGame.combo}`;
+}
+
+function finishMiniGame() {
+  const game = state.miniGame;
+  if (!game) return;
+
+  stopMiniGameTimer();
+  const total = game.correct + game.wrong || game.words.length;
+  const rate = total ? Math.round((game.correct / total) * 100) : 0;
+  const earnedXp = Math.max(5, game.correct * 8 + Math.min(30, game.bestCombo * 2));
+  const earnedStars = Math.max(1, game.correct + (rate === 100 ? 5 : 0));
+  applyGameReward({
+    earnedXp,
+    earnedStars,
+    bestStreak: game.bestCombo,
+  });
+  playFeedbackSound("finish");
+  els.miniGamePlayArea.innerHTML = `
+    <div class="mini-result-card">
+      <span>${rate >= 90 ? "🏆" : rate >= 70 ? "🌟" : "🌼"}</span>
+      <h3>${MINI_GAME_CONFIG[game.type].title}完成</h3>
+      <p>答对 ${game.correct} 个，错题 ${game.wrong} 个，正确率 ${rate}%。</p>
+      <div class="reward-box mini-reward-box">
+        <div class="reward-item"><span>获得经验</span><strong>+${earnedXp} XP</strong></div>
+        <div class="reward-item"><span>获得星星</span><strong>+${earnedStars}</strong></div>
+        <div class="reward-item"><span>最高连击</span><strong>${game.bestCombo}</strong></div>
+      </div>
+      <button class="big-start-button" data-mini-game="${game.type}" type="button">再玩一局</button>
+    </div>
+  `;
+  els.miniGameFeedback.className = "mini-game-feedback hidden";
+  renderGamePanel();
+  renderWrongGarden();
+  state.miniGame = null;
+}
+
+function exitMiniGame() {
+  stopMiniGameTimer();
+  state.miniGame = null;
+  els.miniGameStage.classList.add("hidden");
+  els.gameMenu.classList.remove("hidden");
+  els.miniGameFeedback.className = "mini-game-feedback hidden";
+  renderWrongGarden();
+}
+
+function startMiniGameTimer() {
+  stopMiniGameTimer();
+  state.miniGameTimerId = window.setInterval(() => {
+    if (!state.miniGame) return;
+    state.miniGame.remainingSeconds -= 1;
+    els.miniGameTimer.textContent = `${state.miniGame.remainingSeconds}s`;
+    if (state.miniGame.remainingSeconds <= 0) {
+      finishMiniGame();
+    }
+  }, 1000);
+}
+
+function stopMiniGameTimer() {
+  if (!state.miniGameTimerId) return;
+  window.clearInterval(state.miniGameTimerId);
+  state.miniGameTimerId = null;
+}
+
+function buildWordOptions(current) {
+  const source = getGameWords("choice").filter((item) => normalizeAnswer(item.word) !== normalizeAnswer(current.word));
+  const options = [current, ...shuffle(source).slice(0, 3)];
+  while (options.length < 4) {
+    options.push(TRIAL_WORDS[options.length % TRIAL_WORDS.length]);
+  }
+  return shuffle(options);
+}
+
+function createSentencePrompt(word) {
+  return `I can use ____ in a simple English sentence.`;
+}
+
+function createFallbackMeaning(word) {
+  return `${word} 的意思`;
+}
+
 function renderGamePanel() {
   const profile = getGameProfile(state.game.xp);
   els.heroGameLevel.textContent = `Lv.${profile.level}`;
@@ -796,6 +1284,100 @@ function renderGamePanel() {
   els.gameRoundsText.textContent = `🎮 已完成 ${state.game.rounds} 局`;
   els.gameSummary.textContent =
     profile.level >= 5 ? "已经是高级冒险者了，试试雅思计划里的高阶词。" : "答对单词获得经验和星星，连击越高奖励越多。";
+}
+
+function markGardenWrong(wordItem, answer) {
+  if (!wordItem?.word) return;
+  const key = normalizeWordKey(wordItem.word);
+  const oldItem = state.game.garden?.[key] || {};
+  state.game.garden = {
+    ...state.game.garden,
+    [key]: {
+      word: wordItem.word,
+      meaning: wordItem.meaning || oldItem.meaning || "",
+      wrongCount: (oldItem.wrongCount || 0) + 1,
+      correctStreak: 0,
+      lastAnswer: answer,
+      updatedAt: Date.now(),
+    },
+  };
+  saveGame();
+}
+
+function markGardenCorrect(wordItem) {
+  if (!wordItem?.word) return;
+  const key = normalizeWordKey(wordItem.word);
+  const oldItem = state.game.garden?.[key];
+  if (!oldItem) return;
+
+  const nextStreak = (oldItem.correctStreak || 0) + 1;
+  state.game.garden[key] = {
+    ...oldItem,
+    correctStreak: nextStreak,
+    updatedAt: Date.now(),
+  };
+  saveGame();
+}
+
+function renderWrongGarden() {
+  const items = Object.values(state.game.garden || {}).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const mastered = items.filter((item) => (item.correctStreak || 0) >= 3).length;
+  const reviewing = items.length - mastered;
+  els.gardenMasteredCount.textContent = `${mastered} 朵花`;
+  els.gardenReviewCount.textContent = `${reviewing} 个待浇水`;
+
+  if (items.length === 0) {
+    els.wrongGardenList.className = "garden-list empty-state";
+    els.wrongGardenList.textContent = "还没有小错题，先玩一局小游戏吧。";
+    return;
+  }
+
+  els.wrongGardenList.className = "garden-list";
+  els.wrongGardenList.innerHTML = items
+    .map((item) => {
+      const status = getGardenStatus(item);
+      return `
+        <article class="garden-card ${status.className}">
+          <div>
+            <span class="garden-flower">${status.icon}</span>
+            <strong>${escapeHtml(item.word)}</strong>
+            <p>${escapeHtml(item.meaning || "无中文释义")}</p>
+            <small>${status.label}｜错误 ${item.wrongCount || 0} 次｜连续答对 ${item.correctStreak || 0} 次</small>
+          </div>
+          <div class="garden-actions">
+            <button class="icon-button" data-garden-speak="${escapeHtml(item.word)}" type="button">🔊</button>
+            <button class="ghost-button" data-garden-practice="${escapeHtml(item.word)}" type="button">练一下</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function getGardenStatus(item) {
+  const streak = item.correctStreak || 0;
+  if (streak >= 3) return { icon: "🌸", label: "已掌握", className: "mastered" };
+  if (streak >= 2) return { icon: "🌼", label: "快掌握了", className: "almost" };
+  if (streak >= 1) return { icon: "🌱", label: "练习中", className: "learning" };
+  return { icon: "🌷", label: "新错题", className: "new" };
+}
+
+function handleGardenClick(event) {
+  const speakWordValue = event.target.dataset.gardenSpeak;
+  if (speakWordValue) {
+    speakWord(speakWordValue);
+    return;
+  }
+
+  const practiceWord = event.target.dataset.gardenPractice;
+  if (!practiceWord) return;
+
+  const item = Object.values(state.game.garden || {}).find(
+    (gardenItem) => normalizeAnswer(gardenItem.word) === normalizeAnswer(practiceWord),
+  );
+  if (!item) return;
+
+  startPractice([{ id: `garden-${item.word}`, word: item.word, meaning: item.meaning || "", createdAt: Date.now() }], true);
 }
 
 function getGameProfile(totalXp) {
@@ -1076,6 +1658,7 @@ function showCorrectFeedback(wordItem) {
   const message = pickRandom(CORRECT_MESSAGES);
   revealCoverCard("correct", wordItem);
   decorateAnswerInput("correct");
+  markGardenCorrect(wordItem);
   playFeedbackSound("correct");
   createParticles("correct");
   els.feedbackBox.className = "feedback correct";
@@ -1110,6 +1693,7 @@ function showWrongFeedback(wordItem, answer, isSkip = false) {
 
 function recordWrong(wordItem, answer) {
   const practice = state.practice;
+  markGardenWrong(wordItem, answer);
   practice.wrongItems.push({
     wordItem,
     answer,

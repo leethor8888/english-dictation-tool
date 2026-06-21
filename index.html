@@ -15,6 +15,7 @@
         </div>
         <nav class="top-actions" aria-label="页面导航">
           <button class="ghost-button" data-view-button="home" type="button">首页</button>
+          <button class="ghost-button" data-view-button="games" type="button">小游戏</button>
           <button class="ghost-button" data-view-button="ielts" type="button">雅思计划</button>
           <button class="ghost-button" data-view-button="settings" type="button">设置</button>
         </nav>
@@ -58,6 +59,11 @@
               <span>🌷</span>
               <strong>我的设置</strong>
               <small>语速和顺序</small>
+            </button>
+            <button class="quick-action-card" data-view-button="games" type="button">
+              <span>🎮</span>
+              <strong>游戏乐园</strong>
+              <small>换一种方式记</small>
             </button>
           </section>
 
@@ -317,6 +323,84 @@
             <p class="source-note">
               说明：雅思官方公布分数能力描述，但不公布每个分数对应的精确词汇量。这里的词汇量是备考规划估算，后续可以替换为你的正式词库。
             </p>
+          </section>
+        </section>
+
+        <section id="gamesView" class="view" aria-labelledby="gamesTitle">
+          <section class="panel games-hero">
+            <div>
+              <p class="panel-kicker">GAME PARK</p>
+              <h2 id="gamesTitle">英语小游戏乐园</h2>
+              <p>用当前单词本玩短局游戏。每一局都能获得星星和经验，错题会进入小花园慢慢复习。</p>
+            </div>
+            <div class="garden-summary">
+              <span>🌼 错题小花园</span>
+              <strong id="gardenMasteredCount">0 朵花</strong>
+              <small id="gardenReviewCount">0 个待浇水</small>
+            </div>
+          </section>
+
+          <section id="gameMenu" class="mini-game-grid" aria-label="小游戏列表">
+            <button class="mini-game-card" data-mini-game="choice" type="button">
+              <span>🎧</span>
+              <strong>听音选词</strong>
+              <small>听声音，从 4 个词里选答案</small>
+            </button>
+            <button class="mini-game-card" data-mini-game="spell" type="button">
+              <span>🔤</span>
+              <strong>拼字掉落</strong>
+              <small>点字母，拼出听到的单词</small>
+            </button>
+            <button class="mini-game-card" data-mini-game="match" type="button">
+              <span>🧩</span>
+              <strong>单词配对</strong>
+              <small>英文和中文释义快速配对</small>
+            </button>
+            <button class="mini-game-card" data-mini-game="timed" type="button">
+              <span>⏱️</span>
+              <strong>限时连击</strong>
+              <small>60 秒内听写，连击加分</small>
+            </button>
+            <button class="mini-game-card" data-mini-game="sentence" type="button">
+              <span>📝</span>
+              <strong>句子补词</strong>
+              <small>把单词放进日常用语</small>
+            </button>
+            <button class="mini-game-card" data-mini-game="sound" type="button">
+              <span>🕵️</span>
+              <strong>发音小侦探</strong>
+              <small>分辨 ship / sheep 这类近音词</small>
+            </button>
+          </section>
+
+          <section id="miniGameStage" class="panel mini-game-stage hidden" aria-live="polite">
+            <div class="mini-game-top">
+              <div>
+                <p id="miniGameKicker" class="stage-pill">第 1 题</p>
+                <h2 id="miniGameTitle">小游戏</h2>
+                <p id="miniGameHint">准备开始。</p>
+              </div>
+              <button id="exitMiniGameButton" class="ghost-button" type="button">返回游戏乐园</button>
+            </div>
+            <div class="mini-game-score">
+              <span id="miniGameProgress">0 / 0</span>
+              <span id="miniGameScore">⭐ 0</span>
+              <span id="miniGameCombo">连击 0</span>
+              <span id="miniGameTimer">--</span>
+            </div>
+            <div id="miniGamePlayArea" class="mini-game-play-area"></div>
+            <div id="miniGameFeedback" class="mini-game-feedback hidden"></div>
+          </section>
+
+          <section class="panel garden-panel">
+            <div class="section-head">
+              <div>
+                <p class="panel-kicker">REVIEW GARDEN</p>
+                <h2>错题小花园</h2>
+                <p>小错题不是失败，是下次进步的入口。答对越多，花就越亮。</p>
+              </div>
+            </div>
+            <div id="wrongGardenList" class="garden-list empty-state">还没有小错题，先玩一局小游戏吧。</div>
           </section>
         </section>
 
